@@ -8,6 +8,10 @@ LIB_FLAGS = -lpthread -lfolly -lgflags -lglog -lgtest -larmadillo
 CC_FLAGS = -std=c++14 -g -Wl,--no-as-needed
 
 OPT = -O0
+
+TOPDIR = ..
+
+INCLUDE = -I$(TOPDIR)
 ## As the Armadillo library uses recursive templates, compilation times depend on the level of optimisation:
 ##
 ## -O0: quick compilation, but the resulting program will be slow
@@ -30,18 +34,23 @@ OPT = -O0
 ## Uncomment the above line to disable Armadillo's checks.
 ## Not recommended unless your code has been first thoroughly tested!
 
+CXXFLAGS = $(DEBUG) $(FINAL) $(OPT) $(EXTRA_OPT) $(INCLUDE)
 
-CXXFLAGS = $(DEBUG) $(FINAL) $(OPT) $(EXTRA_OPT)
-
-all: matrixTestRun
+all: matrixTestRun registryTestRun
 
 matrixTest: matrixTest.cpp
+	$(CXX) $(CC_FLAGS) $(CXXFLAGS)  -o $@ $< $(LIB_FLAGS)
+
+registryTest: RegistryTest.cpp
 	$(CXX) $(CC_FLAGS) $(CXXFLAGS)  -o $@ $< $(LIB_FLAGS)
 
 matrixTestRun: matrixTest
 	./$<
 
-.PHONY: clean matrixTestRun
+registryTestRun: registryTest
+	./$<
+
+.PHONY: clean matrixTestRun registryTestRun
 
 clean:
 	rm -f matrixTest
