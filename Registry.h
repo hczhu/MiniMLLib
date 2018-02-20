@@ -29,8 +29,7 @@ struct InitFunc {
 
 } // namespace mini_ml
 
-
-#define DECLARE_REGISTRY(name, keyType, valueType)                             \
+#define DECLARE_REGISTRY(name, keyType, valueType) \
   namespace mini_ml { namespace registries { \
     struct name##Registry##T : public mini_ml::Registry<keyType, valueType> {}; \
   }}

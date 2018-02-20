@@ -36,12 +36,15 @@ INCLUDE = -I$(TOPDIR)
 
 CXXFLAGS = $(DEBUG) $(FINAL) $(OPT) $(EXTRA_OPT) $(INCLUDE)
 
-all: matrixTestRun registryTestRun
+all: matrixTestRun registryTestRun dataTestRun
 
 matrixTest: matrixTest.cpp
 	$(CXX) $(CC_FLAGS) $(CXXFLAGS)  -o $@ $< $(LIB_FLAGS)
 
 registryTest: RegistryTest.cpp
+	$(CXX) $(CC_FLAGS) $(CXXFLAGS)  -o $@ $< $(LIB_FLAGS)
+
+dataTest: DataTest.cpp
 	$(CXX) $(CC_FLAGS) $(CXXFLAGS)  -o $@ $< $(LIB_FLAGS)
 
 matrixTestRun: matrixTest
@@ -50,8 +53,11 @@ matrixTestRun: matrixTest
 registryTestRun: registryTest
 	./$<
 
-.PHONY: clean matrixTestRun registryTestRun
+dataTestRun: dataTest
+	./$<
+
+.PHONY: clean matrixTestRun registryTestRun dataTestRun
 
 clean:
-	rm -f matrixTest
+	rm -f matrixTest registryTest dataTest
 

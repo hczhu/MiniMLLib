@@ -1,3 +1,5 @@
+#pragma once
+
 #include <map>
 
 namespace mini_ml {
