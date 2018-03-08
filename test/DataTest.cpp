@@ -33,7 +33,7 @@
 
 #include "Data.h"
 
-TEST(DataTest, Basic) {
+TEST(DataTest, Sparse) {
   mini_ml::SparseFeatureIns<int> ins;
   std::vector<mini_ml::SparseFeatureIns<int>::Fid> expect;
   for (int i = 0; i < 10; ++i) {
@@ -41,6 +41,28 @@ TEST(DataTest, Basic) {
     expect.push_back(i);
   }
   EXPECT_EQ(expect, ins.allFeatureIds());
+}
+
+TEST(DataTest, Dense) {
+  mini_ml::DenseFeatureIns<int> ins(8, -1);
+  ins.setFeature(0, 1);
+  ins.setFeature(3, 3);
+  ins.setFeature(7, 0);
+
+  for (const auto& pr : std::vector<std::pair<int, int>>{
+    {0, 1},
+    {1, -1},
+    {3, 3},
+    {5, -1},
+    {7, 0},
+  }) {
+    EXPECT_EQ(pr.second, ins.getFeature(pr.first));
+    EXPECT_EQ(pr.second, ins.getFeatureDouble(pr.first));
+    const auto &baseIns = ins;
+    EXPECT_EQ(pr.second,
+              baseIns.getFeatureDouble(
+                  static_cast<mini_ml::DataInstanceBase::Fid>(pr.first)));
+  }
 }
 
 int main(int argc, char* argv[]) {
