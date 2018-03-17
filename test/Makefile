@@ -1,6 +1,6 @@
 CXX=g++
 
-LIB_FLAGS = -lpthread -lfolly -lgflags -lglog -lgtest -larmadillo
+LIB_FLAGS = -lpthread -lfolly -lgflags -lglog -lgtest -larmadillo $(CPP_LIBS)
 ## NOTE: on Ubuntu and Debian based systems you may need to add -lgfortran
   
 #LIB_FLAGS = -larmadillo -library=sunperf
