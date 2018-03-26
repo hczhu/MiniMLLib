@@ -5,33 +5,58 @@
 
 namespace mini_ml {
 
-std::vector<double> fitLSM(const std::vector<std::vector<double>> &X,
-                           const std::vector<double> &Y, double L2) {
+std::vector<double> fitLSM(const std::vector<std::vector<double>>& X,
+                           const std::vector<double>& Y, double L2,
+                           const std::vector<double>& W) {
   const int n = X.size();
   const int m = X[0].size();
   CHECK_EQ(n, Y.size());
-  arma::Mat<double> X1(n, m + 1);
+  // X' * diag(W) * X
+  // 'm + 1' for the intercept.
+  arma::Mat<double> XtWX(m + 1, m + 1, arma::fill::zeros);
+  // TODO: Use OpenMP
   for (int i = 0; i < n; ++i) {
+    const double w = W.empty() ? 1 : W[i];
+    const auto& x = X[i];
     for (int j = 0; j < m; ++j) {
-      X1(i, j) = X[i][j];
+      for (int k = j; k < m; ++k) {
+        XtWX(j, k) += w * x[j] * x[k];
+      }
+      XtWX(j, m) += w * x[j];
     }
-    X1(i, m) = 1;
+    XtWX(m, m) += w;
   }
-  decltype(X1) Xt = X1.t();
-  decltype(X1) X2 = Xt * X1;
-  CHECK_EQ(X2.n_rows, m + 1);
-  CHECK_EQ(X2.n_cols, m + 1);
+  for (int j = 0; j <= m; ++j) {
+    for (int k = 0; k < j; ++k) {
+      XtWX(j, k) = XtWX(k, j);
+    }
+  }
   for (int i = 0; i < m; ++i) {
-    X2(i, i) += L2;
+    XtWX(i, i) += L2;
   }
   arma::vec Yv(Y);
-  arma::vec theta = arma::inv(X2) * (Xt * Yv);
-  // LOG(INFO) << "Theta := " << theta;
-  auto norm = arma::norm(X1 * theta - Yv);
+  if (!W.empty()) {
+    for (int i = 0; i < n; ++i) {
+      Yv(i) *= W[i];
+    }
+  }
+  arma::mat Xt(m + 1, n);
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < m; ++j) {
+      Xt(j, i) = X[i][j];
+    }
+    Xt(m, i) = 1;
+  }
+  arma::vec theta = arma::inv(XtWX) * (Xt * Yv);
+  // LOG(INFO) << "Theta = " << theta;
+  arma::vec error = (theta.t() * Xt - Yv.t()).t();
+  double sqError = 0;
+  for (int i = 0; i < n; ++i) {
+    sqError += (W.empty() ? 1 : W[i]) * error(i) * error(i);
+  }
   auto thetaNorm = arma::norm(theta(arma::span(0, m - 1)));
-  LOG(INFO) << "Squared error with L2 (" << L2
-            << "):= " << norm * norm << " theta square = "
-            << thetaNorm * thetaNorm;
+  LOG(INFO) << "Squared error with L2 (" << L2 << "):= " << sqError
+            << " theta square = " << thetaNorm * thetaNorm;
   return arma::conv_to<std::vector<double>>::from(theta);
 }
 

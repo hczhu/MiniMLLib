@@ -33,6 +33,8 @@
 
 #include "prototypes/LinearReg.h"
 
+DEFINE_int32(seed, 11772, "The seed for random generator.");
+
 template<typename T>
 class _DisplayType;
 
@@ -46,7 +48,7 @@ void _displayType(T&& t);
 using namespace mini_ml;
 
 TEST(PrototypesTest, LinearReg) {
-  std::default_random_engine generator;
+  std::default_random_engine generator(FLAGS_seed);
   std::uniform_real_distribution<double> uniform(-1, 1);
   std::normal_distribution<double> guass(0, 0.05);
   const int n = 100;
@@ -71,9 +73,12 @@ TEST(PrototypesTest, LinearReg) {
   EXPECT_NEAR(0, arma::norm(theta - arma::vec(estimate1)), 1e-1);
 
   EXPECT_LT(arma::norm(arma::vec(estimate1)), arma::norm(arma::vec(estimate0)));
-
+  auto prevEstimate = estimate1;
   for (double L2 = 2; L2 < 16; L2 += 1) {
-    fitLSM(X, Y, L2);
+    auto estimate = fitLSM(X, Y, L2);
+    EXPECT_LT(arma::norm(arma::vec(estimate)),
+              arma::norm(arma::vec(prevEstimate)));
+    prevEstimate = std::move(estimate);
   }
 }
 
