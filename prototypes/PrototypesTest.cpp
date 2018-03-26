@@ -31,6 +31,10 @@
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
 
+#include <folly/gen/Base.h>
+#include <folly/gen/String.h>
+// #include <folly/String.h>
+
 #include "prototypes/LinearReg.h"
 
 DEFINE_int32(seed, 11772, "The seed for random generator.");
@@ -80,6 +84,27 @@ TEST(PrototypesTest, LinearReg) {
               arma::norm(arma::vec(prevEstimate)));
     prevEstimate = std::move(estimate);
   }
+}
+
+TEST(PrototypesTest, QuasarSpectra) {
+  // http://cs229.stanford.edu/ps/ps1/ps1.pdf
+  std::ifstream ifs("data/quasar_train.csv");
+  auto readLine = [&] {
+    std::string line;
+    ifs >> line;
+    using namespace folly::gen;
+    return split(line, ',') | eachTo<double>() | as<std::vector>();
+  };
+  std::vector<std::vector<double>> X;
+  for (auto x : readLine()) {
+    X.push_back(std::vector<double>(1, x));
+  }
+  const auto Y = readLine();
+  EXPECT_EQ(Y.size(), X.size());
+  ifs.close();
+  const auto theta = fitLSM(X, Y);
+  EXPECT_EQ(2, theta.size());
+  std::cout << theta[0] << " " << theta[1] << std::endl;
 }
 
 int main(int argc, char* argv[]) {
