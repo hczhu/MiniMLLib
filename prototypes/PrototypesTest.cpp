@@ -31,6 +31,7 @@
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
 
+#include <folly/Range.h>
 #include <folly/gen/Base.h>
 #include <folly/gen/String.h>
 // #include <folly/String.h>
@@ -117,25 +118,40 @@ TEST(PrototypesTest, LinearReg) {
   }
 }
 
-TEST(PrototypesTest, QuasarSpectra) {
+TEST(PrototypesTest, QuasarSpectraLinearReg) {
   // http://cs229.stanford.edu/ps/ps1/ps1.pdf
   std::ifstream ifs("data/quasar_train.csv");
-  auto readLine = [&] {
+  auto readLine = [&] (std::ifstream& ifs){
     std::string line;
     ifs >> line;
     using namespace folly::gen;
     return split(line, ',') | eachTo<double>() | as<std::vector>();
   };
   std::vector<std::vector<double>> X;
-  for (auto x : readLine()) {
+  for (auto x : readLine(ifs)) {
     X.push_back(std::vector<double>(1, x));
   }
-  const auto Y = readLine();
+  const auto Y = readLine(ifs);
   EXPECT_EQ(Y.size(), X.size());
   ifs.close();
+
   const auto theta = fitLSM(X, Y);
   EXPECT_EQ(2, theta.size());
-  std::cout << theta[0] << " " << theta[1] << std::endl;
+  LOG(INFO) << theta[0] << " " << theta[1] << std::endl;
+
+  using namespace folly::gen;
+  auto printValues = [](const std::vector<double>& v, const std::string& name) {
+    std::cout << name << " " << (from(v) | unsplit(',')) << std::endl;
+  };
+  
+  std::cout << (from(X) | rconcat | unsplit(',')) << std::endl;
+
+  printValues(Y, "Observed");
+  auto lY = Y;
+  for (int i = 0; i < X.size(); ++i) {
+    lY[i] = theta[0] * X[i][0] + theta[1];
+  }
+  printValues(Y, "Linear-reg");
 }
 
 int main(int argc, char* argv[]) {
