@@ -85,7 +85,7 @@ TEST(PrototypesTest, LinearReg) {
     prevEstimate = std::move(estimate);
   }
 
-  std::uniform_real_distribution<double> intUniform(1, 100);
+  std::uniform_int_distribution<> intUniform(1, 100);
   std::vector<double> W(n);
   std::generate(W.begin(), W.end(), std::bind(intUniform, generator));
   std::vector<std::vector<double>> estimateWithW(5);
@@ -113,7 +113,7 @@ TEST(PrototypesTest, LinearReg) {
     }
     EXPECT_NEAR(0, arma::norm(arma::vec(estimateWithoutW) -
                               arma::vec(estimateWithW[L2])),
-                1e-15);
+                1e-4);
   }
 }
 

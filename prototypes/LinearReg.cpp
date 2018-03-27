@@ -49,7 +49,7 @@ std::vector<double> fitLSM(const std::vector<std::vector<double>>& X,
   }
   arma::vec theta = arma::inv(XtWX) * (Xt * Yv);
   // LOG(INFO) << "Theta = " << theta;
-  arma::vec error = (theta.t() * Xt - Yv.t()).t();
+  arma::vec error = (theta.t() * Xt - arma::vec(Y).t()).t();
   double sqError = 0;
   for (int i = 0; i < n; ++i) {
     sqError += (W.empty() ? 1 : W[i]) * error(i) * error(i);
