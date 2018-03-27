@@ -7,17 +7,17 @@ import matplotlib.pyplot as plt, matplotlib.image as mpimg
 
 # %matplotlib inline
 
-def plotCurves(X, Y, xlabel = '', ylabels = '', labels = []):
+def plotCurves(X, Y, xlabel = '', ylabel = '', labels = []):
     assert len(X[0]) == len(Y[0])
     for i in range(len(Y)):
-        plt.plot(X[i] if i < len(X) else X[0], Y[i], label = lables[i] if i < len(labels) else 'curve-{}'.format(i))
+        plt.plot(X[i] if i < len(X) else X[0], Y[i], label = labels[i] if i < len(labels) else 'curve-{}'.format(i))
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
     plt.show()
 
 def main():
-    X = list(map(float, sys.stdin.readline.strip().split(',')))
+    X = list(map(float, sys.stdin.readline().strip().split(',')))
     Y, labels = [], []
     for line in sys.stdin:
         label, y = line.strip().split()
