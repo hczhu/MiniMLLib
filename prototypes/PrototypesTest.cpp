@@ -80,9 +80,40 @@ TEST(PrototypesTest, LinearReg) {
   auto prevEstimate = estimate1;
   for (double L2 = 2; L2 < 16; L2 += 1) {
     auto estimate = fitLSM(X, Y, L2);
-    EXPECT_LT(arma::norm(arma::vec(estimate)),
+    EXPECT_LE(arma::norm(arma::vec(estimate)),
               arma::norm(arma::vec(prevEstimate)));
     prevEstimate = std::move(estimate);
+  }
+
+  std::uniform_real_distribution<double> intUniform(1, 100);
+  std::vector<double> W(n);
+  std::generate(W.begin(), W.end(), std::bind(intUniform, generator));
+  std::vector<std::vector<double>> estimateWithW(5);
+  for (int L2 = 0; L2 < estimateWithW.size(); ++L2) {
+    estimateWithW[L2] = fitLSM(X, Y, L2, W);
+  }
+  for (int i = 0; i < n; ++i) {
+    if (W[i] > 1) {
+      auto x = X[i];
+      X.push_back(std::move(x));
+      Y.push_back(Y[i]);
+      W[i] -= 1;
+      while (W[i] > 0) {
+        X.push_back(X.back());
+        Y.push_back(Y[i]);
+        W[i] -= 1;
+      }
+    }
+  }
+  EXPECT_NEAR(0, arma::norm(theta - arma::vec(estimateWithW[0])), 1e-10);
+  for (int L2 = 0; L2 < estimateWithW.size(); ++L2) {
+    auto estimateWithoutW = fitLSM(X, Y, L2);
+    if (L2 == 0) {
+      EXPECT_NEAR(0, arma::norm(theta - arma::vec(estimateWithoutW)), 1e-10);
+    }
+    EXPECT_NEAR(0, arma::norm(arma::vec(estimateWithoutW) -
+                              arma::vec(estimateWithW[L2])),
+                1e-15);
   }
 }
 
