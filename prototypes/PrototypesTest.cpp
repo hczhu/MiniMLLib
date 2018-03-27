@@ -32,6 +32,7 @@
 #include <gtest/gtest.h>
 
 #include <folly/Range.h>
+#include <folly/Format.h>
 #include <folly/gen/Base.h>
 #include <folly/gen/String.h>
 // #include <folly/String.h>
@@ -152,6 +153,19 @@ TEST(PrototypesTest, QuasarSpectraLinearReg) {
     lY[i] = theta[0] * X[i][0] + theta[1];
   }
   printValues(lY, "Linear-reg");
+
+  auto W = Y;
+  for (double sm : {5, 1, 10, 100, 1000}) {
+    for (int i = 0; i < X.size(); ++i) {
+      auto x = X[i][0];
+      for (int j = 0; j < W.size(); ++j) {
+        W[j] = exp(-(x - X[j][0]) * (x - X[j][0]) / 2 / sm / sm);
+      }
+      auto theta = fitLSM(X, Y, 0, W);
+      lY[i] = theta[0] * x + theta[1];
+    }
+    printValues(lY, folly::sformat("Locally-weighted-linear-reg-sigma={}", sm));
+  }
 }
 
 int main(int argc, char* argv[]) {
