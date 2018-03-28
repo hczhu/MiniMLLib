@@ -48,30 +48,38 @@ void quasarSpectraLinearReg() {
     ifs.ignore(2);
     return split(line, ',') | eachTo<double>() | as<std::vector>();
   };
+
+  auto X = readLine(trainIfs);
+  CHECK(X == readLine(testIfs));
+
+  std::vector<std::vector<double>> WW5(X.size(),
+                                       std::vector<double>(X.size(), 0));
+  for (int i = 0; i < X.size(); ++i) {
+    for (int j = i + 1; j < X.size(); ++j) {
+      WW5[i][j] = WW5[j][i] = exp(-(X[i] - X[j]) * (X[i] - X[j]) / 50.0);
+    }
+    WW5[i][i] = 1;
+  }
   auto smoothY = [](const std::vector<double>& X, const std::vector<double>& Y,
                     double sm,
-                    std::vector<std::vector<double>>* thetas = nullptr) {
+                    std::vector<std::vector<double>>* WW = nullptr) {
     auto W = Y;
     auto sY = Y;
     for (int i = 0; i < X.size(); ++i) {
       auto x = X[i];
-      for (int j = 0; j < W.size(); ++j) {
-        W[j] = exp(-(x - X[j]) * (x - X[j]) / 2 / sm / sm);
+      if (WW == nullptr) {
+        for (int j = 0; j < W.size(); ++j) {
+          W[j] = exp(-(x - X[j]) * (x - X[j]) / 2 / sm / sm);
+        }
       }
       auto theta = fitLSM(from(X) | map([](double x) {
                             return std::vector<double>(1, x);
                           }) | as<std::vector>(),
-                          Y, 0, W);
+                          Y, 0, WW ? (*WW)[i] : W);
       sY[i] = theta[0] * x + theta[1];
-      if (thetas) {
-        thetas->push_back(std::move(theta));
-      }
     }
     return sY;
   };
-
-  auto X = readLine(trainIfs);
-  CHECK(X == readLine(testIfs));
 
   std::vector<std::vector<double>> trainY;
   std::vector<std::vector<double>> testY;
@@ -111,18 +119,17 @@ void quasarSpectraLinearReg() {
   }
   // smooth all
   for (auto& y : trainY) {
-    y = smoothY(X, y, 5);
+    y = smoothY(X, y, 5, &WW5);
   }
   for (auto& y : testY) {
-    y = smoothY(X, y, 5);
+    y = smoothY(X, y, 5, &WW5);
   }
   LOG(INFO) << "Smoothed all.";
-
   int cutoff = 150;
-  auto distance = [&, cutoff](const auto& Y1, const auto& Y2, bool right = true) {
+  auto distance = [&](const auto& Y1, const auto& Y2, bool right = true) {
     double res = 0;
     int begin = 0;
-    int end = cutoff;
+    int end = 50;
     if (right) {
       begin = cutoff;
       end = Y1.size();
@@ -133,34 +140,57 @@ void quasarSpectraLinearReg() {
     return res;
   };
   const int K = 3;
-  auto estimate = [&, cutoff] (const auto& Ys, const auto& Y) {
+  auto estimate = [&] (const auto& Ys, const auto& Y) {
     std::vector<std::pair<double, int>> disIdx;
     for (int i = 0; i < Ys.size(); ++i) {
       disIdx.emplace_back(distance(Y, Ys[i]), i);
     }
     std::sort(disIdx.begin(), disIdx.end());
-    std::vector<double> eY(0, Y.size());
+    std::vector<double> eY(Y.size(), 0);
+    for (int i = 50; i < Y.size(); ++i) {
+      eY[i] = Y[i];
+    }
     const auto h = disIdx.back().first;
     double wSum = 0;
     for (int i = 0; i < K; ++i) {
       double w = std::max(0.0, 1 - disIdx[i].first / h);
-      wSum = w;
+      wSum += w;
       auto idx = disIdx[i].second;
       for (int j = 0; j < cutoff; ++j) {
         eY[j] += w * Ys[idx][j];
       }
     }
-    for (auto& y : eY) {
-      y /= wSum;
+    for (int j = 0; j < cutoff; ++j) {
+      eY[j] /= wSum;
     }
     return eY;
   };
   double errorSum = 0;
   for (const auto& y : trainY) {
     auto ey = estimate(trainY, y);
-     errorSum += distance(ey, y, false);
+    errorSum += distance(ey, y, false);
   }
-  LOG(INFO) << "Training error: " << errorSum / trainY.size();
+  std::cout << "Training error: " << errorSum / trainY.size() << std::endl;
+  errorSum = 0;
+  for (const auto& y : testY) {
+    auto ey = estimate(trainY, y);
+    errorSum += distance(ey, y, false);
+  }
+  std::cout << "Testing error: " << errorSum / testY.size() << std::endl;
+
+  for (int idx : {0, 5}) {
+    std::ofstream ofs(folly::sformat("data/test_example_{}.csv", idx + 1));
+    auto printValues = [&](const std::vector<double>& v,
+                           const std::string& name = "") {
+      if (!name.empty()) {
+        ofs << name << " ";
+      }
+      ofs << (from(v) | unsplit(',')) << std::endl;
+    };
+    printValues(X);
+    printValues(testY[idx], "Observed");
+    printValues(estimate(trainY, testY[idx]), "Estimated");
+  }
 }
 
 // http://cs229.stanford.edu/ps/ps1/ps1.pdf
