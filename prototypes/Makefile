@@ -9,7 +9,7 @@ LDFLAGS = -lfolly -lgtest -lgflags -lglog -larmadillo -lpthread $(CPP_LIBS)
   
 #LIB_FLAGS = -larmadillo -library=sunperf
 
-CXXFLAGS = $(GCC_FLAGS) $(INCLUDE)
+CXXFLAGS = $(GCC_FLAGS) $(INCLUDE) -O3
 
 ## As the Armadillo library uses recursive templates, compilation times depend on the level of optimisation:
 ##
