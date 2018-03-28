@@ -33,15 +33,25 @@ CXXFLAGS = $(GCC_FLAGS) $(INCLUDE)
 ## Uncomment the above line to disable Armadillo's checks.
 ## Not recommended unless your code has been first thoroughly tested!
 
-TEST_CPP = PrototypesTest.cpp
-TEST_BINARY = $(patsubst %.cpp,%,$(TEST_CPP))
-LIBS = $(patsubst %.cpp,%.o,$(wildcard *.cpp))
+TESTS = $(patsubst %.cpp,%,$(wildcard *Test.cpp))
+BINARIES = $(patsubst %.cpp,%,$(wildcard *Main.cpp))
 
-$(TEST_BINARY) : $(LIBS)
-	$(CXX) -o $@ $^ $(LDFLAGS)
+LIBS_SOURCES := $(filter-out %Test.cpp,$(wildcard *.cpp))
+LIBS_SOURCES := $(filter-out %Main.cpp,$(LIBS_SOURCES))
+LIBS = $(patsubst %.cpp,%.o,$(LIBS_SOURCES))
 
-test: $(TEST_BINARY)
-	./$(TEST_BINARY)
+all: test $(BINARIES)
+
+$(TESTS): $(LIBS) $(wildcard *Test.cpp)
+	echo "here"
+	# Will have a recipe for each target in $(TESTS)
+	$(CXX) -o $@ $(LIBS) $@.cpp $(LDFLAGS) $(CXXFLAGS)
+
+$(BINARIES): $(LIBS) $(wildcard *Main.cpp)
+	$(CXX) -o $@ $@.cpp $(LIBS) $(LDFLAGS) $(CXXFLAGS)
+
+test: $(TESTS)
+	echo '$^' | xargs -d' ' -I'{}' echo "./{}" | bash -
 
 .PHONY: clean
 
