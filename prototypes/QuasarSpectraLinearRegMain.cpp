@@ -156,11 +156,11 @@ void quasarSpectraLinearReg() {
       double w = std::max(0.0, 1 - disIdx[i].first / h);
       wSum += w;
       auto idx = disIdx[i].second;
-      for (int j = 0; j < cutoff; ++j) {
+      for (int j = 0; j < 50; ++j) {
         eY[j] += w * Ys[idx][j];
       }
     }
-    for (int j = 0; j < cutoff; ++j) {
+    for (int j = 0; j < 50; ++j) {
       eY[j] /= wSum;
     }
     return eY;
