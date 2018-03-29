@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
     // options.lrDecay = 1;
     auto theta = fitLR(X, Y, options);
     {
-      std::ofstream f("data/logistic_data_a.txt");
+      std::ofstream f(std::string(name) + ".lr");
       for (auto th : theta) {
         f << th << " ";
       }
