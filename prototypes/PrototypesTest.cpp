@@ -185,7 +185,7 @@ TEST(PrototypesTest, LogisticReg) {
       EXPECT_GE(z, 0.0);
     }
   }
-  LOG(INFO) << "Testing L2 logistic reg.";
+  LOG(INFO) << "Testing L2 SGD logistic reg.";
   {
     Options options;
     auto thetaHat = fitLR(X, Y, options);

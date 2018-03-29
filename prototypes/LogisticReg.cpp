@@ -75,7 +75,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       }
       auto probs = predProb();
       arma::vec dtheta =
-          (((1.0 - probs) % vY).t() * X1).t() + (options.L2 * theta);
+          (((1.0 - probs) % vY).t() * X1).t() - (options.L2 * theta);
       if (options.useNewton) {
         arma::mat H(m + 1, m + 1, arma::fill::zeros);
         for (int i = 0; i < n; ++i) {
