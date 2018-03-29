@@ -37,7 +37,10 @@
 #include <folly/gen/String.h>
 // #include <folly/String.h>
 
+#include <armadillo>
+
 #include "prototypes/LinearReg.h"
+#include "prototypes/LogisticReg.h"
 
 DEFINE_int32(seed, 11772, "The seed for random generator.");
 
@@ -53,25 +56,41 @@ void _displayType(T&& t);
 
 using namespace mini_ml;
 
-TEST(PrototypesTest, LinearReg) {
+template <typename T>
+arma::vec generateLinearData(
+    std::vector<std::vector<double>>& X, std::vector<T>& Y,
+    std::function<T(double, std::default_random_engine&)> transformer) {
   std::default_random_engine generator(FLAGS_seed);
   std::uniform_real_distribution<double> uniform(-1, 1);
-  std::normal_distribution<double> guass(0, 0.05);
-  const int n = 100;
-  const int m = 10;
+  const int n = X.size();
+  const int m = X[0].size();
   arma::vec theta(m + 1);
   for (auto& th : theta) {
     th = uniform(generator);
   }
-  const double intercept = uniform(generator);
-  std::vector<double> Y(n);
-  std::vector<std::vector<double>> X(n, std::vector<double>(m));
   for (int i = 0; i < n; ++i) {
     for (auto& x : X[i]) {
       x = uniform(generator);
     }
-    Y[i] = arma::dot(theta(arma::span(0, m - 1)), arma::vec(X[i])) + theta(m);
+    Y[i] = transformer(arma::dot(theta(arma::span(0, m - 1)), arma::vec(X[i])) +
+                           theta(m),
+                       generator);
   }
+  return theta;
+}
+
+TEST(PrototypesTest, LinearReg) {
+  std::default_random_engine generator;
+  std::uniform_real_distribution<double> uniform(-1, 1);
+  std::normal_distribution<double> guass(0, 0.01);
+  const int n = 100;
+  const int m = 10;
+  std::vector<std::vector<double>> X(n, std::vector<double>(m));
+  std::vector<double> Y(n);
+  arma::vec theta = generateLinearData<double>(
+      X, Y, [&](double y, std::default_random_engine& generator) {
+        return y; // + guass(generator);
+      });
   auto estimate0 = fitLSM(X, Y);
   EXPECT_NEAR(0, arma::norm(theta - arma::vec(estimate0)), 1e-10);
 
@@ -117,6 +136,20 @@ TEST(PrototypesTest, LinearReg) {
                               arma::vec(estimateWithW[L2])),
                 1e-4);
   }
+}
+
+TEST(PrototypesTest, LogisticReg) {
+  const int n = 1000;
+  const int m = 100;
+  std::vector<std::vector<double>> X(n, std::vector<double>(m));
+  std::vector<int> Y(n);
+  const arma::vec theta = generateLinearData<int>(
+      X, Y, [&](double y, std::default_random_engine& generator) {
+        return y > 0 ? 1 : -1;
+      });
+  Options options;
+  auto thetaHat = fitLR(X, Y, options);
+  EXPECT_NEAR(0, arma::norm(theta - arma::vec(thetaHat)), 1e-10);
 }
 
 int main(int argc, char* argv[]) {

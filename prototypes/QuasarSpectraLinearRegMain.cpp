@@ -25,6 +25,7 @@
 #include <thread>
 #include <valarray>
 #include <vector>
+#include <fstream>
 
 #include <glog/logging.h>
 #include <gflags/gflags.h>

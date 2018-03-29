@@ -43,7 +43,6 @@ LIBS = $(patsubst %.cpp,%.o,$(LIBS_SOURCES))
 all: test $(BINARIES)
 
 $(TESTS): $(LIBS) $(wildcard *Test.cpp)
-	echo "here"
 	# Will have a recipe for each target in $(TESTS)
 	$(CXX) -o $@ $(LIBS) $@.cpp $(LDFLAGS) $(CXXFLAGS)
 

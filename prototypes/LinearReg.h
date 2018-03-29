@@ -2,9 +2,6 @@
 
 #include <vector>
 
-#include <armadillo>
-#include <glog/logging.h>
-
 namespace mini_ml {
 
 // Minimize | W * (X * theta + intercept - Y)|^2 + 0.5 * l2 * |theta|^2
