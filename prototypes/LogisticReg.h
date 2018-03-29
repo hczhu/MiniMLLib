@@ -13,8 +13,8 @@ struct Options {
   bool randomInit = false;
   bool useNewton = false;
   int miniBatchSize = 32;
-  double momentumMultiplier = 0.9;
-  double minThetaDiffNorm = 1e-2;
+  double momentumMultiplier = 0.8;
+  double minThetaDiffNorm = 1e-4;
   bool chooseBestLoglossTheta = true;
   bool chooseBestErrorRateTheta = true;
 };
