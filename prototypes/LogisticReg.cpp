@@ -39,7 +39,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     const arma::vec theta1 = theta(arma::span(0, m - 1));
     int error = 0;
     for (int i = 0; i < X.size(); ++i) {
-      auto z = Y[i] * arma::dot(arma::vec(X[i]), theta1) + theta(m);
+      auto z = Y[i] * (arma::dot(arma::vec(X[i]), theta1) + theta(m));
       if (z < 0) {
         ++error;
       }

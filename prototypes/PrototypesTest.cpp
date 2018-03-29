@@ -154,13 +154,18 @@ TEST(PrototypesTest, LogisticReg) {
         }
         return y > 0 ? 1 : -1;
       });
+  for (int i = 0; i < n; ++i) {
+    auto z = Y[i] * (arma::dot(arma::vec(X[i]), theta(arma::span(0, m - 1))) +
+                     theta(m));
+    EXPECT_GE(z, 0.0);
+  }
   Options options;
   auto thetaHat = fitLR(X, Y, options);
   const arma::vec theta1(
       std::vector<double>(thetaHat.begin(), thetaHat.end() - 1));
   // Should be able to classify the training data perfectly.
   for (int i = 0; i < n; ++i) {
-    auto z = Y[i] * arma::dot(arma::vec(X[i]), theta1) + thetaHat[m];
+    auto z = Y[i] * (arma::dot(arma::vec(X[i]), theta1) + thetaHat[m]);
     EXPECT_GE(z, 0.0);
   }
 }
