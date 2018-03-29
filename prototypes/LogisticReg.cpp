@@ -48,7 +48,8 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       }
       res -= log(sigmod(z));
     }
-    return {res, error};
+    return {res + 0.5 * options.L2 * arma::norm(theta1) * arma::norm(theta1),
+            error};
   };
   int numBatches =
       (X.size() + options.miniBatchSize - 1) / options.miniBatchSize;
@@ -73,11 +74,15 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
         }
       }
       auto probs = predProb();
-      arma::vec dtheta = (((1.0 - probs) % vY).t() * X1).t();
+      arma::vec dtheta =
+          (((1.0 - probs) % vY).t() * X1).t() + (options.L2 * theta);
       if (options.useNewton) {
         arma::mat H(m + 1, m + 1, arma::fill::zeros);
         for (int i = 0; i < n; ++i) {
           H += (X1.row(i).t() * X1.row(i)) * (probs(i) * (1 - probs(i)));
+        }
+        for (int i = 0; i < m + 1; ++i) {
+          H(i, i) += options.L2;
         }
         dtheta = arma::inv(H) * dtheta;
       } else {
@@ -104,7 +109,8 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     LOG_EVERY_N(INFO, FLAGS_log_every_n)
         << "Epoch #" << epoch << " learning rate = " << options.learningRate
         << " theta diff norm = " << arma::norm(prevTheta - theta)
-        << " logloss = " << ll << " error rate = " << er;
+        << " logloss (with L2=" << options.L2 << "): " << ll
+        << " error rate = " << er;
     if (arma::norm(prevTheta - theta) < options.minThetaDiffNorm) {
       LOG(INFO) << "Exiting earlier due to that the theta update is too small "
                    "in the last epoch.";

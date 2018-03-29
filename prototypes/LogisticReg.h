@@ -12,7 +12,7 @@ struct Options {
   double lrDecay = 0.999;
   bool randomInit = false;
   bool useNewton = false;
-  int miniBatchSize = 32;
+  int miniBatchSize = 100;
   double momentumMultiplier = 0.5;
   double minThetaDiffNorm = 1e-2;
   bool chooseBestLoglossTheta = true;

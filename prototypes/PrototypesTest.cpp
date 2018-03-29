@@ -185,6 +185,32 @@ TEST(PrototypesTest, LogisticReg) {
       EXPECT_GE(z, 0.0);
     }
   }
+  LOG(INFO) << "Testing L2 logistic reg.";
+  {
+    Options options;
+    auto thetaHat = fitLR(X, Y, options);
+    double prevNorm = 1e40;
+    for (int L2 = 1; L2 < 10; ++L2) {
+      options.L2 = L2;
+      auto norm = arma::norm(arma::vec(fitLR(X, Y, options)));
+      EXPECT_LE(norm, prevNorm);
+      prevNorm = norm;
+    }
+  }
+  LOG(INFO) << "Testing L2 Newton logistic reg.";
+  {
+    Options options;
+    options.useNewton = true;
+    options.miniBatchSize = n;
+    auto thetaHat = fitLR(X, Y, options);
+    double prevNorm = 1e40;
+    for (int L2 = 1; L2 < 10; ++L2) {
+      options.L2 = L2;
+      auto norm = arma::norm(arma::vec(fitLR(X, Y, options)));
+      EXPECT_LE(norm, prevNorm);
+      prevNorm = norm;
+    }
+  }
 }
 
 int main(int argc, char* argv[]) {
