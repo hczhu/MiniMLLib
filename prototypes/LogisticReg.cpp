@@ -53,14 +53,12 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       dtheta *= options.learningRate;
       options.learningRate *= options.lrDecay;
     }
-    auto maxDeltaRatio = arma::max(arma::abs(dtheta)) /
-                         std::max(1.0, arma::max(arma::abs(theta)));
+    auto thetaMax = arma::max(arma::abs(theta));
+    auto maxDeltaRatio = arma::max(arma::abs(dtheta)) / std::max(1.0, thetaMax);
     theta += dtheta;
-    if (options.normalizeTheta) {
-      theta = normalise(theta);
-    }
     LOG_EVERY_N(INFO, 1) << "Iteration #" << itr
                           << " learning rate = " << options.learningRate
+                          << " theta max = " << thetaMax
                           << " theta update ratio max = " << maxDeltaRatio
                           << " log-loss = " << -arma::sum(arma::log(probs));
     if (maxDeltaRatio < options.exitThetaDeltaRatio) {
