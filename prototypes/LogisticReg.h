@@ -14,9 +14,10 @@ struct Options {
   bool useNewton = false;
   int miniBatchSize = 32;
   double momentumMultiplier = 0.5;
-  double minThetaDiffNorm = 1e-3;
+  double minThetaDiffNorm = 1e-2;
   bool chooseBestLoglossTheta = true;
   bool chooseBestErrorRateTheta = true;
+  bool stopIfZeroError = true;
 };
 
 // Minimize log-loss.

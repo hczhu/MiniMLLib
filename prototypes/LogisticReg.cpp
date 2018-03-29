@@ -53,19 +53,30 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   double best = 1e20;
   decltype(theta) bestTheta = theta;
   int bestEpoch = 0;
+  if (options.useNewton) {
+    CHECK_EQ(1, numBatches);
+  }
   for (int epoch = 0; epoch < options.numEpoch; ++epoch) {
     auto prevTheta = theta;
     for (int batch = 0; batch < numBatches; ++batch) {
-      for (int i = 0; i < n; ++i) {
-        int instanceId = (n * batch + i) % Y.size();
-        vY(i) = Y[instanceId];
-        for (int j = 0; j < m; ++j) {
-          X1(i, j) = X[instanceId][j];
+      // Prepare data for this batch
+      if (epoch == 0 || numBatches > 1) {
+        for (int i = 0; i < n; ++i) {
+          int instanceId = (n * batch + i) % Y.size();
+          vY(i) = Y[instanceId];
+          for (int j = 0; j < m; ++j) {
+            X1(i, j) = X[instanceId][j];
+          }
         }
       }
       auto probs = predProb();
       arma::vec dtheta = (((1.0 - probs) % vY).t() * X1).t();
       if (options.useNewton) {
+        arma::mat H(m + 1, m + 1, arma::fill::zeros);
+        for (int i = 0; i < n; ++i) {
+          H += (X1.row(i).t() * X1.row(i)) * (probs(i) * (1 - probs(i)));
+        }
+        dtheta = arma::inv(H) * dtheta;
       } else {
         momentum = momentum * options.momentumMultiplier +
                    dtheta * (1 - options.momentumMultiplier);
@@ -87,14 +98,17 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       bestTheta = theta;
       bestEpoch = epoch;
     }
-    LOG_EVERY_N(INFO, 10) << "Epoch #" << epoch
-                          << " learning rate = " << options.learningRate
-                          << " theta diff norm = "
-                          << arma::norm(prevTheta - theta)
-                          << " logloss = " << ll << " error rate = " << er;
+    LOG_EVERY_N(INFO, 10)
+        << "Epoch #" << epoch << " learning rate = " << options.learningRate
+        << " theta diff norm = " << arma::norm(prevTheta - theta)
+        << " logloss = " << ll << " error rate = " << er;
     if (arma::norm(prevTheta - theta) < options.minThetaDiffNorm) {
       LOG(INFO) << "Exiting earlier due to that the theta update is too small "
                    "in the last epoch.";
+      break;
+    }
+    if (er == 0 && options.stopIfZeroError) {
+      LOG(INFO) << "Training data got classified perfectly. Exiting...";
       break;
     }
     prevTheta = theta;

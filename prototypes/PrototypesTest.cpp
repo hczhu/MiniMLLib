@@ -143,8 +143,8 @@ TEST(PrototypesTest, LinearReg) {
 }
 
 TEST(PrototypesTest, LogisticReg) {
-  const int n = 10000;
-  const int m = 1000;
+  const int n = 1000;
+  const int m = 100;
   std::vector<std::vector<double>> X(n, std::vector<double>(m));
   std::vector<int> Y(n);
   const arma::vec theta = generateLinearData<int>(
@@ -159,14 +159,31 @@ TEST(PrototypesTest, LogisticReg) {
                      theta(m));
     EXPECT_GE(z, 0.0);
   }
-  Options options;
-  auto thetaHat = fitLR(X, Y, options);
-  const arma::vec theta1(
-      std::vector<double>(thetaHat.begin(), thetaHat.end() - 1));
-  // Should be able to classify the training data perfectly.
-  for (int i = 0; i < n; ++i) {
-    auto z = Y[i] * (arma::dot(arma::vec(X[i]), theta1) + thetaHat[m]);
-    EXPECT_GE(z, 0.0);
+  LOG(INFO) << "Testing SGD logistic reg.";
+  {
+    Options options;
+    auto thetaHat = fitLR(X, Y, options);
+    const arma::vec theta1(
+        std::vector<double>(thetaHat.begin(), thetaHat.end() - 1));
+    // Should be able to classify the training data perfectly.
+    for (int i = 0; i < n; ++i) {
+      auto z = Y[i] * (arma::dot(arma::vec(X[i]), theta1) + thetaHat[m]);
+      EXPECT_GE(z, 0.0);
+    }
+  }
+  LOG(INFO) << "Testing Newton logistic reg.";
+  {
+    Options options;
+    options.useNewton = true;
+    options.miniBatchSize = n;
+    auto thetaHat = fitLR(X, Y, options);
+    const arma::vec theta1(
+        std::vector<double>(thetaHat.begin(), thetaHat.end() - 1));
+    // Should be able to classify the training data perfectly.
+    for (int i = 0; i < n; ++i) {
+      auto z = Y[i] * (arma::dot(arma::vec(X[i]), theta1) + thetaHat[m]);
+      EXPECT_GE(z, 0.0);
+    }
   }
 }
 
