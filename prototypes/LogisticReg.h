@@ -10,7 +10,7 @@ struct Options {
   double learningRate = 5;
   // Decay every round.
   double lrDecay = 0.999;
-  double exitThetaDelta = 1e-5;
+  double exitThetaDeltaRatio = 1e-4;
   bool randomInit = true;
   bool useNewton = false;
 };

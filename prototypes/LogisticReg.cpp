@@ -42,19 +42,22 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   LOG(INFO) << "Initial log-loss = " << logloss();
   for (int itr = 0; itr < options.maxItr; ++itr) {
     auto probs = predProb();
-    arma::vec dtheta = (((1.0 -  probs) % vY).t() * X1).t();
+    arma::vec dtheta = (((1.0 - probs) % vY).t() * X1).t();
     if (options.useNewton) {
 
     } else {
-      theta += (dtheta * options.learningRate);
+      dtheta *= options.learningRate;
       options.learningRate *= options.lrDecay;
     }
+    auto maxDeltaRatio = arma::max(arma::abs(dtheta)) /
+                         std::max(1.0, arma::max(arma::abs(theta)));
+    theta += dtheta;
     LOG_EVERY_N(INFO, 10) << "Iteration #" << itr
                           << " learning rate = " << options.learningRate
+                          << " theta update ratio max = " << maxDeltaRatio
                           << " log-loss = " << -arma::sum(arma::log(probs));
-    if (options.lrDecay * arma::max(arma::abs(dtheta)) <
-        options.exitThetaDelta) {
-      LOG(INFO) << "The update is too small: " << arma::max(arma::abs(dtheta))
+    if (maxDeltaRatio < options.exitThetaDeltaRatio) {
+      LOG(INFO) << "The update " << maxDeltaRatio << " is too small."
                 << " Finishing training.";
       break;
     }

@@ -149,7 +149,15 @@ TEST(PrototypesTest, LogisticReg) {
       });
   Options options;
   auto thetaHat = fitLR(X, Y, options);
-  EXPECT_NEAR(0, arma::norm(theta - arma::vec(thetaHat)), 1e-10);
+  // Should be able to classify the training data perfectly.
+  for (int i = 0; i < n; ++i) {
+    double sum = 0;
+    for (int j = 0; j < m; ++j) {
+      sum += X[i][j] * thetaHat[j];
+    }
+    sum += thetaHat[m];
+    EXPECT_GE(sum * Y[i], 0.0);
+  }
 }
 
 int main(int argc, char* argv[]) {
