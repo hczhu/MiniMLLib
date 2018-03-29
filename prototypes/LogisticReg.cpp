@@ -87,12 +87,11 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       bestTheta = theta;
       bestEpoch = epoch;
     }
-    LOG_EVERY_N(INFO, 1) << "Epoch #" << epoch
-                         << " learning rate = " << options.learningRate
-                         << " theta diff norm = "
-                         << arma::norm(prevTheta - theta)
-                         << " logloss = " << ll
-                         << " error rate = " << er;
+    LOG_EVERY_N(INFO, 10) << "Epoch #" << epoch
+                          << " learning rate = " << options.learningRate
+                          << " theta diff norm = "
+                          << arma::norm(prevTheta - theta)
+                          << " logloss = " << ll << " error rate = " << er;
     if (arma::norm(prevTheta - theta) < options.minThetaDiffNorm) {
       LOG(INFO) << "Exiting earlier due to that the theta update is too small "
                    "in the last epoch.";
