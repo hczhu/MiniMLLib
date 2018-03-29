@@ -7,7 +7,7 @@ namespace mini_ml {
 struct Options {
   double L2 = 0;
   int numEpoch = 1000;
-  double learningRate = 100;
+  double learningRate = 10;
   // Decay every round.
   double lrDecay = 0.999;
   bool randomInit = false;

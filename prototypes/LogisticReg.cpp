@@ -82,7 +82,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
         dtheta = arma::inv(H) * dtheta;
       } else {
         momentum = momentum * options.momentumMultiplier +
-                   dtheta * (1 - options.momentumMultiplier);
+                   dtheta / n * (1 - options.momentumMultiplier);
         dtheta = momentum * options.learningRate;
       }
       theta += dtheta;
