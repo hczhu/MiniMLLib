@@ -149,14 +149,12 @@ TEST(PrototypesTest, LogisticReg) {
       });
   Options options;
   auto thetaHat = fitLR(X, Y, options);
+  const arma::vec theta1(
+      std::vector<double>(thetaHat.begin(), thetaHat.end() - 1));
   // Should be able to classify the training data perfectly.
   for (int i = 0; i < n; ++i) {
-    double sum = 0;
-    for (int j = 0; j < m; ++j) {
-      sum += X[i][j] * thetaHat[j];
-    }
-    sum += thetaHat[m];
-    EXPECT_GE(sum * Y[i], 0.0);
+    auto z = Y[i] * arma::dot(arma::vec(X[i]), theta1) + thetaHat[m];
+    EXPECT_GE(z, 0.0);
   }
 }
 

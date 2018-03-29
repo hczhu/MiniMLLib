@@ -15,6 +15,8 @@ struct Options {
   int miniBatchSize = 32;
   double momentumMultiplier = 0.9;
   double minThetaDiffNorm = 1e-2;
+  bool chooseBestLoglossTheta = true;
+  bool chooseBestErrorRateTheta = true;
 };
 
 // Minimize log-loss.

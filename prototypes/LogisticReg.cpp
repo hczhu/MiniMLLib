@@ -34,17 +34,25 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     });
     return z;
   };
-  auto logloss = [&] {
+  auto loglossAndError = [&]() -> std::pair<double, int> {
     double res = 0;
     const arma::vec theta1 = theta(arma::span(0, m - 1));
+    int error = 0;
     for (int i = 0; i < X.size(); ++i) {
-      res -= log(sigmod(Y[i] * arma::dot(arma::vec(X[i]), theta1) + theta(m)));
+      auto z = Y[i] * arma::dot(arma::vec(X[i]), theta1) + theta(m);
+      if (z < 0) {
+        ++error;
+      }
+      res -= log(sigmod(z));
     }
-    return res;
+    return {res, error};
   };
   int numBatches =
       (X.size() + options.miniBatchSize - 1) / options.miniBatchSize;
   decltype(theta) momentum = theta * 0;
+  double best = 1e20;
+  decltype(theta) bestTheta = theta;
+  int bestEpoch = 0;
   for (int epoch = 0; epoch < options.numEpoch; ++epoch) {
     auto prevTheta = theta;
     for (int batch = 0; batch < numBatches; ++batch) {
@@ -63,21 +71,43 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
                    dtheta * (1 - options.momentumMultiplier);
         dtheta = momentum * options.learningRate;
       }
-
       theta += dtheta;
     }
-    LOG_EVERY_N(INFO, 10) << "Epoch #" << epoch
-                          << " learning rate = " << options.learningRate
-                          << " theta diff norm = "
-                          << arma::norm(prevTheta - theta)
-                          << " log-loss = " << logloss();
-    options.learningRate *= options.lrDecay;
+    double ll;
+    int er;
+    std::tie(ll, er) = loglossAndError();
+    if (options.chooseBestErrorRateTheta) {
+      if (er <= best) {
+        best = er;
+        bestTheta = theta;
+        bestEpoch = epoch;
+      }
+    } else if (ll <= best) {
+      best = ll;
+      bestTheta = theta;
+      bestEpoch = epoch;
+    }
+    LOG_EVERY_N(INFO, 1) << "Epoch #" << epoch
+                         << " learning rate = " << options.learningRate
+                         << " theta diff norm = "
+                         << arma::norm(prevTheta - theta)
+                         << " logloss = " << ll
+                         << " error rate = " << er;
     if (arma::norm(prevTheta - theta) < options.minThetaDiffNorm) {
       LOG(INFO) << "Exiting earlier due to that the theta update is too small "
                    "in the last epoch.";
+      break;
     }
+    prevTheta = theta;
+    options.learningRate *= options.lrDecay;
   }
-  return arma::conv_to<std::vector<double>>::from(theta);
+  LOG(INFO) << "Best "
+            << (options.chooseBestErrorRateTheta ? "#error = " : "logloss = ")
+            << best << " at epoch #" << bestEpoch;
+  return arma::conv_to<std::vector<double>>::from(
+      (options.chooseBestLoglossTheta || options.chooseBestErrorRateTheta)
+          ? bestTheta
+          : theta);
 }
 
 }  // namespace mini_ml
