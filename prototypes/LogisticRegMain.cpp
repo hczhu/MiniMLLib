@@ -91,6 +91,16 @@ int main(int argc, char* argv[]) {
     // options.momentumMultiplier = 0;
     // options.lrDecay = 1;
     auto theta = fitLR(X, Y, options);
+    {
+      std::ofstream f("data/logistic_data_a.txt");
+      for (auto th : theta) {
+        f << th << " ";
+      }
+      f << std::endl;
+      for (int i = 0; i < Y.size(); ++i) {
+        f << X[i][0] << " " << X[i][1] << " " << Y[i] << std::endl;
+      }
+    }
   }
   return 0;
 }
