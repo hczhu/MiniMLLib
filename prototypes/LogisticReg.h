@@ -13,6 +13,7 @@ struct Options {
   double exitThetaDeltaRatio = 1e-4;
   bool randomInit = true;
   bool useNewton = false;
+  bool normalizeTheta = true;
 };
 
 // Minimize log-loss.

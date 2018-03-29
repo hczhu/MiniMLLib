@@ -139,8 +139,8 @@ TEST(PrototypesTest, LinearReg) {
 }
 
 TEST(PrototypesTest, LogisticReg) {
-  const int n = 1000;
-  const int m = 100;
+  const int n = 10000;
+  const int m = 1000;
   std::vector<std::vector<double>> X(n, std::vector<double>(m));
   std::vector<int> Y(n);
   const arma::vec theta = generateLinearData<int>(
