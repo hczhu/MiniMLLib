@@ -68,13 +68,17 @@ arma::vec generateLinearData(
   for (auto& th : theta) {
     th = uniform(generator);
   }
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < n;) {
     for (auto& x : X[i]) {
       x = uniform(generator);
     }
-    Y[i] = transformer(arma::dot(theta(arma::span(0, m - 1)), arma::vec(X[i])) +
-                           theta(m),
-                       generator);
+    try {
+      Y[i] = transformer(
+          arma::dot(theta(arma::span(0, m - 1)), arma::vec(X[i])) + theta(m),
+          generator);
+      ++i;
+    } catch (...) {
+    }
   }
   return theta;
 }
@@ -145,6 +149,9 @@ TEST(PrototypesTest, LogisticReg) {
   std::vector<int> Y(n);
   const arma::vec theta = generateLinearData<int>(
       X, Y, [&](double y, std::default_random_engine& generator) {
+        if (abs(y) < 1e-2) {
+          throw std::runtime_error("too small");
+        }
         return y > 0 ? 1 : -1;
       });
   Options options;
