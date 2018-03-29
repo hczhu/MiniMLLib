@@ -42,6 +42,11 @@ void _displayType(T&& t);
 /* template end */
 
 TEST(Foo, Bar) {
+  for (double x = 40; x < 100; x += 1) {
+    LOG(INFO) << "exp(" << x << ")=" << exp(x) << " exp(" << -x
+              << ")=" << exp(-x) << " sigmod(x) = " << (1 / (1 + exp(-x)))
+              << " sigmod(-x) = " << (1 / (1 + exp(x)));
+  }
 }
 
 int main(int argc, char* argv[]) {

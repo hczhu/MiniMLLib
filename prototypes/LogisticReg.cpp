@@ -15,8 +15,9 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     CHECK(y == -1 || y == 1) << "y can't  must be -1 or 1: " << y;
   }
   auto sigmod = [](double z) {
-    constexpr double eps = 1e-10;
-    if (abs(z) > 20) {
+    constexpr int kCutoff = 100;
+    constexpr double eps = 1e-50;
+    if (abs(z) > kCutoff) {
       return z > 0 ? 1.0 - eps : eps;
     }
     return 1.0 /(1 + exp(-z));
