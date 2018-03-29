@@ -3,6 +3,8 @@
 #include <glog/logging.h>
 #include <armadillo>
 
+DEFINE_int32(log_every_n, 10, "Log logloss every N epoch.");
+
 namespace mini_ml {
 
 std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
@@ -98,7 +100,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       bestTheta = theta;
       bestEpoch = epoch;
     }
-    LOG_EVERY_N(INFO, 10)
+    LOG_EVERY_N(INFO, FLAGS_log_every_n)
         << "Epoch #" << epoch << " learning rate = " << options.learningRate
         << " theta diff norm = " << arma::norm(prevTheta - theta)
         << " logloss = " << ll << " error rate = " << er;
