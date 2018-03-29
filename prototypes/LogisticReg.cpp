@@ -19,20 +19,14 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     }
     return 1.0 /(1 + exp(-z));
   };
-  const int n = X.size();
+  const int n = options.miniBatchSize;
   const int m = X[0].size();
-  arma::vec theta(m + 1, arma::fill::randu);
+  arma::vec theta(m + 1, arma::fill::randn);
   if (!options.randomInit) {
     theta.fill(0);
   }
-  arma::Mat<double> X1(n, m + 1);
-  for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < m; ++j) {
-      X1(i, j) = X[i][j];
-    }
-    X1(i, m) = 1;
-  }
-  arma::Col<int> vY(Y);
+  arma::Mat<double> X1(n, m + 1, arma::fill::ones);
+  arma::Col<int> vY(options.miniBatchSize);
   auto predProb = [&] {
     arma::vec z = (X1 * theta) % vY;
     z.for_each([&](double& val) {
@@ -41,30 +35,46 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     return z;
   };
   auto logloss = [&] {
-    return -arma::sum(arma::log(predProb()));
-  };
-  LOG(INFO) << "Initial log-loss = " << logloss();
-  for (int itr = 0; itr < options.maxItr; ++itr) {
-    auto probs = predProb();
-    arma::vec dtheta = (((1.0 - probs) % vY).t() * X1).t() / m;
-    if (options.useNewton) {
-
-    } else {
-      dtheta *= options.learningRate;
-      options.learningRate *= options.lrDecay;
+    double res = 0;
+    const arma::vec theta1 = theta(arma::span(0, m - 1));
+    for (int i = 0; i < X.size(); ++i) {
+      res -= log(sigmod(Y[i] * arma::dot(arma::vec(X[i]), theta1) + theta(m)));
     }
-    auto thetaMax = arma::max(arma::abs(theta));
-    auto maxDeltaRatio = arma::max(arma::abs(dtheta)) / std::max(1.0, thetaMax);
-    theta += dtheta;
-    LOG_EVERY_N(INFO, 1) << "Iteration #" << itr
+    return res;
+  };
+  int numBatches =
+      (X.size() + options.miniBatchSize - 1) / options.miniBatchSize;
+  decltype(theta) momentum = theta * 0;
+  for (int epoch = 0; epoch < options.numEpoch; ++epoch) {
+    auto prevTheta = theta;
+    for (int batch = 0; batch < numBatches; ++batch) {
+      for (int i = 0; i < n; ++i) {
+        int instanceId = (n * batch + i) % Y.size();
+        vY(i) = Y[instanceId];
+        for (int j = 0; j < m; ++j) {
+          X1(i, j) = X[instanceId][j];
+        }
+      }
+      auto probs = predProb();
+      arma::vec dtheta = (((1.0 - probs) % vY).t() * X1).t();
+      if (options.useNewton) {
+      } else {
+        momentum = momentum * options.momentumMultiplier +
+                   dtheta * (1 - options.momentumMultiplier);
+        dtheta = momentum * options.learningRate;
+      }
+
+      theta += dtheta;
+    }
+    LOG_EVERY_N(INFO, 10) << "Epoch #" << epoch
                           << " learning rate = " << options.learningRate
-                          << " theta max = " << thetaMax
-                          << " theta update ratio max = " << maxDeltaRatio
-                          << " log-loss = " << -arma::sum(arma::log(probs));
-    if (maxDeltaRatio < options.exitThetaDeltaRatio) {
-      LOG(INFO) << "The update " << maxDeltaRatio << " is too small."
-                << " Finishing training.";
-      break;
+                          << " theta diff norm = "
+                          << arma::norm(prevTheta - theta)
+                          << " log-loss = " << logloss();
+    options.learningRate *= options.lrDecay;
+    if (arma::norm(prevTheta - theta) < options.minThetaDiffNorm) {
+      LOG(INFO) << "Exiting earlier due to that the theta update is too small "
+                   "in the last epoch.";
     }
   }
   return arma::conv_to<std::vector<double>>::from(theta);

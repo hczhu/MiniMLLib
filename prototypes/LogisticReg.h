@@ -6,14 +6,15 @@ namespace mini_ml {
 
 struct Options {
   double L2 = 0;
-  int maxItr = 100000;
-  double learningRate = 5;
+  int numEpoch = 1000;
+  double learningRate = 1;
   // Decay every round.
   double lrDecay = 0.999;
-  double exitThetaDeltaRatio = 1e-4;
-  bool randomInit = true;
+  bool randomInit = false;
   bool useNewton = false;
-  bool normalizeTheta = true;
+  int miniBatchSize = 32;
+  double momentumMultiplier = 0.9;
+  double minThetaDiffNorm = 1e-2;
 };
 
 // Minimize log-loss.
