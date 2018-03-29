@@ -87,9 +87,9 @@ int main(int argc, char* argv[]) {
     options.randomInit = false;
     options.miniBatchSize = 100;
     options.minThetaDiffNorm = 1e-15;
-    options.learningRate = 10;
-    options.momentumMultiplier = 0;
-    options.lrDecay = 1;
+    // options.learningRate = 10;
+    // options.momentumMultiplier = 0;
+    // options.lrDecay = 1;
     auto theta = fitLR(X, Y, options);
   }
   return 0;
