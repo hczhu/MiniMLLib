@@ -52,9 +52,11 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     LOG_EVERY_N(INFO, 10) << "Iteration #" << itr
                           << " learning rate = " << options.learningRate
                           << " log-loss = " << -arma::sum(arma::log(probs));
-    if (options.lrDecay * arma::max(arma::abs(dtheta)) < options.exitThetaDelta) {
+    if (options.lrDecay * arma::max(arma::abs(dtheta)) <
+        options.exitThetaDelta) {
       LOG(INFO) << "The update is too small: " << arma::max(arma::abs(dtheta))
                 << " Finishing training.";
+      break;
     }
   }
   return arma::conv_to<std::vector<double>>::from(theta);
