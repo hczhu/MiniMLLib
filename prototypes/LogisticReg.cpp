@@ -46,7 +46,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   LOG(INFO) << "Initial log-loss = " << logloss();
   for (int itr = 0; itr < options.maxItr; ++itr) {
     auto probs = predProb();
-    arma::vec dtheta = (((1.0 - probs) % vY).t() * X1).t();
+    arma::vec dtheta = (((1.0 - probs) % vY).t() * X1).t() / m;
     if (options.useNewton) {
 
     } else {
