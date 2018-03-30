@@ -1,4 +1,4 @@
-include ../macros.mk
+include ../Macros.mk
 
 
 TOPDIR = ..

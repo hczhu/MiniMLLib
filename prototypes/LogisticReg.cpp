@@ -98,8 +98,8 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       }
       theta -= dtheta;
       using namespace folly::gen;
-      VLOG(1) << from(arma::conv_to<std::vector<double>>::from(dtheta)) |
-          unsplit(',');
+      VLOG(1) << (from(arma::conv_to<std::vector<double>>::from(dtheta)) |
+                  unsplit(','));
     }
     double ll;
     int er;
