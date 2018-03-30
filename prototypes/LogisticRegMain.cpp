@@ -90,6 +90,7 @@ int main(int argc, char* argv[]) {
     options.learningRate = 10;
     options.momentumMultiplier = 0;
     options.lrDecay = 1;
+    options.L2 = 1;
     auto theta = fitLR(X, Y, options);
     {
       std::ofstream f(std::string(name) + ".lr");

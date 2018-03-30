@@ -109,6 +109,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     LOG_EVERY_N(INFO, FLAGS_log_every_n)
         << "Epoch #" << epoch << " learning rate = " << options.learningRate
         << " theta diff norm = " << arma::norm(prevTheta - theta)
+        << " theta norm = " << arma::norm(theta)
         << " logloss (with L2=" << options.L2 << "): " << ll
         << " error rate = " << er;
     if (arma::norm(prevTheta - theta) < options.minThetaDiffNorm) {
