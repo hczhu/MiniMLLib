@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
       f << X[i][0] << " " << X[i][1] << " " << Y[i] << std::endl;
     }
   }
-  for (auto name : {"data/data_a.txt", "data/data_b.txt"}) {
+  for (auto name : {"data/data_a.txt", "data/data_a.txt"}) {
     LOG(INFO) << "========= training data in " << name << " ================";
     std::ifstream f(name);
     double y, x1, x2;
@@ -83,14 +83,14 @@ int main(int argc, char* argv[]) {
     }
     Options options;
     options.stopIfZeroError = false;
-    options.numEpoch = 1000000000;
+    options.numEpoch = 10;
     options.randomInit = false;
     options.miniBatchSize = 100;
     options.minThetaDiffNorm = 1e-15;
     options.learningRate = 10;
     options.momentumMultiplier = 0;
     options.lrDecay = 1;
-    options.L2 = 1;
+    options.L2 = 0;
     auto theta = fitLR(X, Y, options);
     {
       std::ofstream f(std::string(name) + ".lr");
@@ -105,4 +105,3 @@ int main(int argc, char* argv[]) {
   }
   return 0;
 }
-

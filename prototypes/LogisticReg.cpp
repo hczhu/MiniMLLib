@@ -1,7 +1,9 @@
 #include "prototypes/LogisticReg.h"
 
-#include <glog/logging.h>
 #include <armadillo>
+#include <folly/gen/Base.h>
+#include <folly/gen/String.h>
+#include <glog/logging.h>
 
 DEFINE_int32(log_every_n, 10, "Log logloss every N epoch.");
 
@@ -31,6 +33,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   arma::Mat<double> X1(n, m + 1, arma::fill::ones);
   arma::Col<int> vY(options.miniBatchSize);
   auto predProb = [&] {
+    // Return P{ y = vY[i] | X1[i] }
     arma::vec z = (X1 * theta) % vY;
     z.for_each([&](double& val) {
       val = sigmod(val);
@@ -74,12 +77,15 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
         }
       }
       auto probs = predProb();
+      // Minimize log-loss:
+      //  -Sigma(log P{ vY[i] | X1[i] }) / n
+      //   + L2 / 2 * norm(theta) * norm(theta)
       arma::vec dtheta =
-          (((1.0 - probs) % vY).t() * X1).t() - (options.L2 * theta);
+          (((probs - 1.0) % vY).t() * X1).t() / n + (options.L2 * theta);
       if (options.useNewton) {
         arma::mat H(m + 1, m + 1, arma::fill::zeros);
         for (int i = 0; i < n; ++i) {
-          H += (X1.row(i).t() * X1.row(i)) * (probs(i) * (1 - probs(i)));
+          H += (X1.row(i).t() * X1.row(i)) * (probs(i) * (1 - probs(i))) / n;
         }
         for (int i = 0; i < m + 1; ++i) {
           H(i, i) += options.L2;
@@ -87,10 +93,13 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
         dtheta = arma::inv(H) * dtheta;
       } else {
         momentum = momentum * options.momentumMultiplier +
-                   dtheta / n * (1 - options.momentumMultiplier);
+                   dtheta * (1 - options.momentumMultiplier);
         dtheta = momentum * options.learningRate;
       }
-      theta += dtheta;
+      theta -= dtheta;
+      using namespace folly::gen;
+      VLOG(1) << from(arma::conv_to<std::vector<double>>::from(dtheta)) |
+          unsplit(',');
     }
     double ll;
     int er;
