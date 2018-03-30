@@ -1,9 +1,7 @@
-CXX=g++
+include ../macros.mk
+
 
 TOPDIR = ..
-INCLUDE = -I$(TOPDIR)
-
-LDFLAGS = -lfolly -lgtest -lgflags -lglog -larmadillo -lpthread $(CPP_LIBS)
 
 ## NOTE: on Ubuntu and Debian based systems you may need to add -lgfortran
   
