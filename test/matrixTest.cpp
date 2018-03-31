@@ -4,7 +4,7 @@
 
 #include <armadillo>
 
-TEST(MatrixTest, MatrixInverse) {
+TEST(MatrixTest, Basic) {
   const int n = 4;
   arma::Mat<double> A(4, 4);
   for (int i = 1; i <= n; ++i ) {
@@ -16,10 +16,17 @@ TEST(MatrixTest, MatrixInverse) {
   LOG(INFO) << "A:\n" << A;
   LOG(INFO) << "det(A) = " << arma::det(A);
   EXPECT_LT(std::abs(arma::det(A) - 12.0), 1e-6);
-  auto iA = arma::inv(A);
+  arma::mat iA = arma::inv(A);
   LOG(INFO) << "A':\n" << iA;
   LOG(INFO) << "A * A':\n" << A * iA;
   EXPECT_LT(arma::norm(((A * iA) - arma::eye<arma::mat>(n, n)), 2), 1e-9);
+
+  arma::mat A1 = 1 - iA;
+  for (int i = 0; i < A1.n_rows; ++i) {
+    for (int j = 0; j < A1.n_cols; ++j) {
+      EXPECT_NEAR(A1(i, j), 1 - iA(i, j), 1e-10);
+    }
+  }
 }
 
 int main(int argc, char* argv[]) {

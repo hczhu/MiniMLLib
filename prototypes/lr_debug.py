@@ -39,13 +39,13 @@ def logistic_regression(X, Y):
     learning_rate = 10
 
     i = 0
-    while i < 10:
+    while True:
         i += 1
         prev_theta = theta
         grad = calc_grad(X, Y, theta)
         theta = theta  - learning_rate * (grad)
         print(theta)
-        if i % 1000 == 0:
+        if i % 1 == 0:
             print('Finished %d iterations logloss = %.3f'%(i, log_loss(X, Y, theta)))
             # print('Finished %d iterations with diff norm = %.16f'%(i, np.linalg.norm(prev_theta - theta)))
         if np.linalg.norm(prev_theta - theta) < 1e-12:
@@ -59,8 +59,8 @@ def main():
     logistic_regression(Xa, Ya)
 
     print('\n==== Training model on data set B ====')
-    Xb, Yb = load_data('data/data_b.txt')
-    logistic_regression(Xb, Yb)
+    # Xb, Yb = load_data('data/data_b.txt')
+    # logistic_regression(Xb, Yb)
 
     return
 

@@ -6,6 +6,7 @@
 #include <glog/logging.h>
 
 DEFINE_int32(log_every_n, 10, "Log logloss every N epoch.");
+DEFINE_int32(num_epoch, 0, "Number of epochs");
 
 namespace mini_ml {
 
@@ -20,7 +21,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     constexpr int kCutoff = 100;
     constexpr double eps = 1e-50;
     if (abs(z) > kCutoff) {
-      return z > 0 ? 1.0 - eps : eps;
+      return z > 0 ? (1.0 - eps) : eps;
     }
     return 1.0 /(1 + exp(-z));
   };
@@ -34,7 +35,9 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   arma::Col<int> vY(options.miniBatchSize);
   auto predProb = [&] {
     // Return P{ y = vY[i] | X1[i] }
-    arma::vec z = (X1 * theta) % vY;
+    // The distance between the origin and the projected point of 'X1[i]'
+    // on the vector of 'theta'.
+    arma::vec margin = (X1 * theta) % vY;
     z.for_each([&](double& val) {
       val = sigmod(val);
     });
@@ -49,10 +52,21 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       if (z < 0) {
         ++error;
       }
-      res -= log(sigmod(z));
+      res += log(sigmod(z));
     }
-    return {res + 0.5 * options.L2 * arma::norm(theta1) * arma::norm(theta1),
+    return {-res / X.size() +
+                0.5 * options.L2 * arma::norm(theta1) * arma::norm(theta1),
             error};
+  };
+  auto checkGrad = [&] (const arma::vec& dtheta) {
+    constexpr double eps = 1e-6;
+    auto ll = loglossAndError().first;
+    for (int idx = 0; idx < m + 1; ++idx) {
+      theta(idx) += eps;
+      auto di = (loglossAndError().first - ll) / eps;
+      CHECK_NEAR(di, dtheta(idx), 1e-10);
+    }
+    return true;
   };
   int numBatches =
       (X.size() + options.miniBatchSize - 1) / options.miniBatchSize;
@@ -62,6 +76,9 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   int bestEpoch = 0;
   if (options.useNewton) {
     CHECK_EQ(1, numBatches);
+  }
+  if (FLAGS_num_epoch > 0) {
+    options.numEpoch = FLAGS_num_epoch;
   }
   for (int epoch = 0; epoch < options.numEpoch; ++epoch) {
     auto prevTheta = theta;
@@ -81,7 +98,11 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       //  -Sigma(log P{ vY[i] | X1[i] }) / n
       //   + L2 / 2 * norm(theta) * norm(theta)
       arma::vec dtheta =
-          (((probs - 1.0) % vY).t() * X1).t() / n + (options.L2 * theta);
+          ((((probs - 1.0) % vY).t() * X1).t() / n) + (options.L2 * theta);
+      using namespace folly::gen;
+      VLOG(1) << (from(arma::conv_to<std::vector<double>>::from(dtheta)) |
+                  unsplit(','));
+      VLOG(1) << checkGrad(dtheta * n);
       if (options.useNewton) {
         arma::mat H(m + 1, m + 1, arma::fill::zeros);
         for (int i = 0; i < n; ++i) {
@@ -97,9 +118,6 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
         dtheta = momentum * options.learningRate;
       }
       theta -= dtheta;
-      using namespace folly::gen;
-      VLOG(1) << (from(arma::conv_to<std::vector<double>>::from(dtheta)) |
-                  unsplit(','));
     }
     double ll;
     int er;
