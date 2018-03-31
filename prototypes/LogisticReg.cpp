@@ -28,9 +28,9 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   };
   const int n = options.miniBatchSize;
   const int m = X[0].size();
-  arma::vec theta(m + 1, arma::fill::randn);
-  if (!options.randomInit) {
-    theta.fill(0);
+  arma::vec theta(m + 1, arma::fill::zeros);
+  if (options.randomInit) {
+    theta.randn();
   }
   arma::Mat<double> X1(n, m + 1, arma::fill::ones);
   arma::Col<int> vY(options.miniBatchSize);
