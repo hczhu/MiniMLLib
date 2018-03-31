@@ -24,5 +24,5 @@ test: $(TESTS)
 .PHONY: clean
 
 clean:
-	rm -f $(LIBS) $(TEST_BINARY)
+	rm -f $(LIBS) $(TESTS) $(BINARIES)
 
