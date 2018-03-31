@@ -96,7 +96,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
           }
         }
       }
-      auto probs = predProb();
+      const auto probs = predProb();
       // Minimize log-loss:
       //  -Sigma(log P{ vY[i] | X1[i] }) / n
       //   + L2 / 2 * norm(theta) * norm(theta) (excluding the intercep)
@@ -144,7 +144,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       LOG(INFO) << "The model converged at epoch #" << epoch;
       resCode = ResCode::CONVERGED;
     }
-    if (er == 0 && options.stopIfZeroError) {
+    if (er == 0 && (options.stopIfZeroError || options.L2 == 0) {
       LOG(INFO) << "Training data got classified perfectly. Exiting...";
       resCode = ResCode::EARLY_TERM;
     }

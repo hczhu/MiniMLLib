@@ -11,11 +11,11 @@ LIBS = $(patsubst %.cpp,%.o,$(LIBS_SOURCES))
 
 all: test $(BINARIES)
 
-$(TESTS): $(LIBS) $(wildcard *Test.cpp)
+$(TESTS): $(LIBS) $(patsubst %,%.o,$(TESTS))
 	# Will have a recipe for each target in $(TESTS)
 	$(CXX) -o $@ $(LIBS) $@.cpp $(LDFLAGS) $(CXXFLAGS)
 
-$(BINARIES): $(LIBS) $(wildcard *Main.cpp)
+$(BINARIES): $(LIBS) $(patsubst %,%.o,$(BINARIES))
 	$(CXX) -o $@ $@.cpp $(LIBS) $(LDFLAGS) $(CXXFLAGS)
 
 test: $(TESTS)
