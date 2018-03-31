@@ -17,8 +17,8 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     return y == -1 || y == 1;
   })) << "All Ys must be 1 or -1";
   CHECK(options.L2 == 0 || options.learningRate <= 1)
-      << "The learning rate should be less than 1 when L2 is used.";
-  auto sigmod = [](double z) {
+      << "The learning rate should be less than 1 when L2 is not used.";
+  auto sigmoid = [](double z) {
     constexpr int kCutoff = 100;
     constexpr double eps = 1e-50;
     if (abs(z) > kCutoff) {
@@ -39,7 +39,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     // The distance between the origin and the projected point of 'X1[i]'
     // on the vector of 'theta'.
     arma::vec margin = (X1 * theta) % vY;
-    margin.for_each([&](double& val) { val = sigmod(val); });
+    margin.for_each([&](double& val) { val = sigmoid(val); });
     return margin;
   };
   auto loglossAndError = [&]() -> std::pair<double, int> {
@@ -51,7 +51,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       if (margin < 0) {
         ++error;
       }
-      res += log(sigmod(margin));
+      res += log(sigmoid(margin));
     }
     return {-res / X.size() +
                 0.5 * options.L2 * arma::norm(theta1) * arma::norm(theta1),
@@ -148,9 +148,10 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       LOG(INFO) << "Training data got classified perfectly. Exiting...";
       resCode = ResCode::EARLY_TERM;
     }
-    LOG_IF(INFO, 0 == (epoch % FLAGS_log_every_n) ||
-                     epoch + 1 == options.numEpoch ||
-                     resCode != ResCode::NOT_CONVERGED)
+    LOG_IF(INFO,
+           (0 == (epoch % FLAGS_log_every_n)) ||
+               epoch + 1 == options.numEpoch ||
+               resCode != ResCode::NOT_CONVERGED)
         << "Epoch #" << epoch << " learning rate = " << options.learningRate
         << " theta diff norm = " << arma::norm(prevTheta - theta)
         << " theta norm = " << arma::norm(theta)

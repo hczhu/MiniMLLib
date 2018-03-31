@@ -14,7 +14,7 @@ struct Options {
   bool useNewton = false;
   int miniBatchSize = 100;
   double momentumMultiplier = 0.5;
-  double minThetaDiffNorm = 1e-3;
+  double minThetaDiffNorm = 1e-5;
   bool chooseBestLoglossTheta = true;
   bool chooseBestErrorRateTheta = true;
   bool stopIfZeroError = false;

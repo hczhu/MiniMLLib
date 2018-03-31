@@ -188,7 +188,6 @@ TEST(PrototypesTest, LogisticReg) {
   LOG(INFO) << "Testing L2 SGD logistic reg.";
   {
     Options options;
-    auto thetaHat = fitLR(X, Y, options);
     double prevNorm = 1e40;
     for (int L2 = 1; L2 < 10; ++L2) {
       options.L2 = L2;
@@ -202,7 +201,6 @@ TEST(PrototypesTest, LogisticReg) {
     Options options;
     options.useNewton = true;
     options.miniBatchSize = n;
-    auto thetaHat = fitLR(X, Y, options);
     double prevNorm = 1e40;
     for (int L2 = 1; L2 < 10; ++L2) {
       options.L2 = L2;
