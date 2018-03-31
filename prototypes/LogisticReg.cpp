@@ -16,8 +16,13 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   CHECK(std::all_of(Y.begin(), Y.end(), [](auto y) {
     return y == -1 || y == 1;
   })) << "All Ys must be 1 or -1";
-  CHECK(options.L2 == 0 || options.learningRate <= 1)
-      << "The learning rate should be less than 1 when L2 is not used.";
+  if (options.learningRate * 2 * options.L2 > 1) {
+    auto newLr = 0.5 / options.L2 * 0.95;
+    LOG(WARNING) << "The learning rate " << options.learningRate
+                 << " is too big because of a big L2 " << options.L2
+                 << ". Adjusted it to " << newLr;
+    options.learningRate = newLr;
+  }
   auto sigmoid = [](double z) {
     constexpr int kCutoff = 100;
     constexpr double eps = 1e-50;

@@ -7,13 +7,13 @@ namespace mini_ml {
 struct Options {
   double L2 = 0;
   int numEpoch = 10000000;
-  double learningRate = 1;
-  // Decay every round.
+  double learningRate = 0.99;
+  // Decay every epoch.
   double lrDecay = 0.999;
   bool randomInit = false;
   bool useNewton = false;
   int miniBatchSize = 100;
-  double momentumMultiplier = 0;
+  double momentumMultiplier = 0.8;
   double minThetaDiffNorm = 1e-5;
   bool chooseBestLoglossTheta = true;
   bool chooseBestErrorRateTheta = true;

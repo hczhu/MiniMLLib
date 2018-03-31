@@ -162,6 +162,8 @@ TEST(PrototypesTest, LogisticReg) {
   LOG(INFO) << "Testing SGD logistic reg.";
   {
     Options options;
+    options.minThetaDiffNorm = 1e-8;
+    options.stopIfZeroError = true;
     auto thetaHat = fitLR(X, Y, options);
     const arma::vec theta1(
         std::vector<double>(thetaHat.begin(), thetaHat.end() - 1));
@@ -176,6 +178,8 @@ TEST(PrototypesTest, LogisticReg) {
     Options options;
     options.useNewton = true;
     options.miniBatchSize = n;
+    options.minThetaDiffNorm = 1e-8;
+    options.stopIfZeroError = true;
     auto thetaHat = fitLR(X, Y, options);
     const arma::vec theta1(
         std::vector<double>(thetaHat.begin(), thetaHat.end() - 1));
@@ -189,6 +193,7 @@ TEST(PrototypesTest, LogisticReg) {
   {
     Options options;
     double prevNorm = 1e40;
+    options.minThetaDiffNorm = 1e-6;
     for (int L2 = 1; L2 < 15; L2 += 4) {
       options.L2 = L2;
       auto norm = arma::norm(arma::vec(fitLR(X, Y, options)));
@@ -201,6 +206,7 @@ TEST(PrototypesTest, LogisticReg) {
     Options options;
     options.useNewton = true;
     options.miniBatchSize = n;
+    options.minThetaDiffNorm = 1e-6;
     double prevNorm = 1e40;
     for (int L2 = 1; L2 < 15; L2 += 4) {
       options.L2 = L2;
