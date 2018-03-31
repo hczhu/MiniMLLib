@@ -103,7 +103,7 @@ TEST(PrototypesTest, LinearReg) {
 
   EXPECT_LT(arma::norm(arma::vec(estimate1)), arma::norm(arma::vec(estimate0)));
   auto prevEstimate = estimate1;
-  for (double L2 = 2; L2 < 16; L2 += 1) {
+  for (double L2 = 2; L2 < 16; L2 += 4) {
     auto estimate = fitLSM(X, Y, L2);
     EXPECT_LE(arma::norm(arma::vec(estimate)),
               arma::norm(arma::vec(prevEstimate)));
@@ -189,7 +189,7 @@ TEST(PrototypesTest, LogisticReg) {
   {
     Options options;
     double prevNorm = 1e40;
-    for (int L2 = 1; L2 < 10; ++L2) {
+    for (int L2 = 1; L2 < 15; L2 += 4) {
       options.L2 = L2;
       auto norm = arma::norm(arma::vec(fitLR(X, Y, options)));
       EXPECT_LE(norm, prevNorm);
@@ -202,7 +202,7 @@ TEST(PrototypesTest, LogisticReg) {
     options.useNewton = true;
     options.miniBatchSize = n;
     double prevNorm = 1e40;
-    for (int L2 = 1; L2 < 10; ++L2) {
+    for (int L2 = 1; L2 < 15; L2 += 4) {
       options.L2 = L2;
       auto norm = arma::norm(arma::vec(fitLR(X, Y, options)));
       EXPECT_LE(norm, prevNorm);
