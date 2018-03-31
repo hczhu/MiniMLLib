@@ -1,4 +1,3 @@
-
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -32,6 +31,9 @@
 #include <gflags/gflags.h>
 
 #include "prototypes/LogisticReg.h"
+
+DEFINE_bool(use_newtone, false,
+            "Wether to use Newton method for optimization.");
 
 using namespace mini_ml;
 
@@ -86,11 +88,12 @@ int main(int argc, char* argv[]) {
     options.numEpoch = 1000000000;
     options.randomInit = false;
     options.miniBatchSize = Y.size();
-    options.minThetaDiffNorm = 1e-15;
-    options.learningRate = 10;
+    options.minThetaDiffNorm = 1e-3;
+    options.learningRate = 1;
     options.momentumMultiplier = 0;
     options.lrDecay = 1;
     options.L2 = 1;
+    options.useNewton = FLAGS_use_newtone;
     auto theta = fitLR(X, Y, options);
     {
       std::ofstream f(std::string(name) + ".lr");

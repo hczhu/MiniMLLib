@@ -5,25 +5,26 @@
 #include <folly/gen/String.h>
 #include <glog/logging.h>
 
-DEFINE_int32(log_every_n, 10, "Log logloss every N epoch.");
+DEFINE_int32(log_every_n, 1000, "Log logloss every N epoch.");
 DEFINE_int32(num_epoch, 0, "Number of epochs");
 
 namespace mini_ml {
 
 std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
-                          const std::vector<int>& Y,
-                          Options options,
+                          const std::vector<int>& Y, Options options,
                           const std::vector<double>& W) {
-  for (auto y : Y) {
-    CHECK(y == -1 || y == 1) << "y can't  must be -1 or 1: " << y;
-  }
+  CHECK(std::all_of(Y.begin(), Y.end(), [](auto y) {
+    return y == -1 || y == 1;
+  })) << "All Ys must be 1 or -1";
+  CHECK(options.L2 == 0 || options.learningRate <= 1)
+      << "The learning rate should be less than 1 when L2 is used.";
   auto sigmod = [](double z) {
     constexpr int kCutoff = 100;
     constexpr double eps = 1e-50;
     if (abs(z) > kCutoff) {
       return z > 0 ? (1.0 - eps) : eps;
     }
-    return 1.0 /(1 + exp(-z));
+    return 1.0 / (1 + exp(-z));
   };
   const int n = options.miniBatchSize;
   const int m = X[0].size();
@@ -38,9 +39,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     // The distance between the origin and the projected point of 'X1[i]'
     // on the vector of 'theta'.
     arma::vec margin = (X1 * theta) % vY;
-    margin.for_each([&](double& val) {
-      val = sigmod(val);
-    });
+    margin.for_each([&](double& val) { val = sigmod(val); });
     return margin;
   };
   auto loglossAndError = [&]() -> std::pair<double, int> {
@@ -58,14 +57,15 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
                 0.5 * options.L2 * arma::norm(theta1) * arma::norm(theta1),
             error};
   };
-  auto checkGrad = [&] (const arma::vec& dtheta) {
-    constexpr double eps = 1e-10;
+  auto checkGrad = [&](const arma::vec& dtheta) {
+    constexpr double eps = 1e-8;
     auto ll = loglossAndError().first;
     for (int idx = 0; idx < m + 1; ++idx) {
       theta(idx) += eps;
       auto di = (loglossAndError().first - ll) / eps;
       theta(idx) -= eps;
-      CHECK_NEAR(di, dtheta(idx), 1);
+      CHECK(abs(di - dtheta(idx)) < 1e-6 || abs(di - dtheta(idx)) / di < 1e-6)
+          << di << " v.s. " << dtheta(idx);
     }
     return true;
   };
@@ -81,7 +81,9 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   if (FLAGS_num_epoch > 0) {
     options.numEpoch = FLAGS_num_epoch;
   }
-  for (int epoch = 0; epoch < options.numEpoch; ++epoch) {
+  ResCode resCode = ResCode::NOT_CONVERGED;
+  for (int epoch = 0;
+       epoch < options.numEpoch && resCode == ResCode::NOT_CONVERGED; ++epoch) {
     auto prevTheta = theta;
     for (int batch = 0; batch < numBatches; ++batch) {
       // Prepare data for this batch
@@ -97,16 +99,17 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       auto probs = predProb();
       // Minimize log-loss:
       //  -Sigma(log P{ vY[i] | X1[i] }) / n
-      //   + L2 / 2 * norm(theta) * norm(theta)
+      //   + L2 / 2 * norm(theta) * norm(theta) (excluding the intercep)
       double intercept = 0;
       std::swap(intercept, theta(m));
       arma::vec dtheta =
           ((((probs - 1.0) % vY).t() * X1) / n).t() + (options.L2 * theta);
       std::swap(intercept, theta(m));
       using namespace folly::gen;
-      VLOG(1) << (from(arma::conv_to<std::vector<double>>::from(dtheta)) |
-                  unsplit(','))
-              << (n == X.size() && checkGrad(dtheta));
+      VLOG_EVERY_N(1, FLAGS_log_every_n)
+          << (from(arma::conv_to<std::vector<double>>::from(dtheta)) |
+              unsplit(','))
+          << (n == X.size() && checkGrad(dtheta));
       if (options.useNewton) {
         arma::mat H(m + 1, m + 1, arma::fill::zeros);
         for (int i = 0; i < n; ++i) {
@@ -137,21 +140,23 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       bestTheta = theta;
       bestEpoch = epoch;
     }
-    LOG_EVERY_N(INFO, FLAGS_log_every_n)
+    if (arma::norm(prevTheta - theta) < options.minThetaDiffNorm) {
+      LOG(INFO) << "Exiting earlier due to that the theta update is too small "
+                   "in the last epoch.";
+      resCode = ResCode::CONVERGED;
+    }
+    if (er == 0 && options.stopIfZeroError) {
+      LOG(INFO) << "Training data got classified perfectly. Exiting...";
+      resCode = ResCode::EARLY_TERM;
+    }
+    LOG_IF(INFO, 0 == (epoch % FLAGS_log_every_n) ||
+                     epoch + 1 == options.numEpoch ||
+                     resCode != ResCode::NOT_CONVERGED)
         << "Epoch #" << epoch << " learning rate = " << options.learningRate
         << " theta diff norm = " << arma::norm(prevTheta - theta)
         << " theta norm = " << arma::norm(theta)
         << " logloss (with L2=" << options.L2 << "): " << ll
         << " error rate = " << er;
-    if (arma::norm(prevTheta - theta) < options.minThetaDiffNorm) {
-      LOG(INFO) << "Exiting earlier due to that the theta update is too small "
-                   "in the last epoch.";
-      break;
-    }
-    if (er == 0 && options.stopIfZeroError) {
-      LOG(INFO) << "Training data got classified perfectly. Exiting...";
-      break;
-    }
     prevTheta = theta;
     options.learningRate *= options.lrDecay;
   }
