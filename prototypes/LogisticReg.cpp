@@ -38,21 +38,21 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
     // The distance between the origin and the projected point of 'X1[i]'
     // on the vector of 'theta'.
     arma::vec margin = (X1 * theta) % vY;
-    z.for_each([&](double& val) {
+    margin.for_each([&](double& val) {
       val = sigmod(val);
     });
-    return z;
+    return margin;
   };
   auto loglossAndError = [&]() -> std::pair<double, int> {
     double res = 0;
     const arma::vec theta1 = theta(arma::span(0, m - 1));
     int error = 0;
     for (int i = 0; i < X.size(); ++i) {
-      auto z = Y[i] * (arma::dot(arma::vec(X[i]), theta1) + theta(m));
-      if (z < 0) {
+      auto margin = Y[i] * (arma::dot(arma::vec(X[i]), theta1) + theta(m));
+      if (margin < 0) {
         ++error;
       }
-      res += log(sigmod(z));
+      res += log(sigmod(margin));
     }
     return {-res / X.size() +
                 0.5 * options.L2 * arma::norm(theta1) * arma::norm(theta1),
@@ -66,7 +66,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       auto di = (loglossAndError().first - ll) / eps;
       CHECK_NEAR(di, dtheta(idx), 1e-10);
     }
-    return true;
+    return "";
   };
   int numBatches =
       (X.size() + options.miniBatchSize - 1) / options.miniBatchSize;
@@ -101,8 +101,8 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
           ((((probs - 1.0) % vY).t() * X1).t() / n) + (options.L2 * theta);
       using namespace folly::gen;
       VLOG(1) << (from(arma::conv_to<std::vector<double>>::from(dtheta)) |
-                  unsplit(','));
-      VLOG(1) << checkGrad(dtheta * n);
+                  unsplit(','))
+              << checkGrad(dtheta);
       if (options.useNewton) {
         arma::mat H(m + 1, m + 1, arma::fill::zeros);
         for (int i = 0; i < n; ++i) {
