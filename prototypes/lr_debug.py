@@ -31,7 +31,7 @@ def calc_grad(X, Y, theta):
 
 def log_loss(X, Y, theta):
     margins = Y * X.dot(theta)
-    return np.sum(-np.log(1. / (1 + np.exp(-margins))))
+    return np.sum(-np.log(1. / (1 + np.exp(-margins)))) / X.shape[0]
 
 def logistic_regression(X, Y):
     m, n = X.shape
@@ -39,12 +39,12 @@ def logistic_regression(X, Y):
     learning_rate = 10
 
     i = 0
-    while True:
+    while i < 100:
         i += 1
         prev_theta = theta
         grad = calc_grad(X, Y, theta)
+        print(grad)
         theta = theta  - learning_rate * (grad)
-        print(theta)
         if i % 1 == 0:
             print('Finished %d iterations logloss = %.3f'%(i, log_loss(X, Y, theta)))
             # print('Finished %d iterations with diff norm = %.16f'%(i, np.linalg.norm(prev_theta - theta)))

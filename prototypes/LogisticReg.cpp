@@ -59,14 +59,15 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
             error};
   };
   auto checkGrad = [&] (const arma::vec& dtheta) {
-    constexpr double eps = 1e-6;
+    constexpr double eps = 1e-10;
     auto ll = loglossAndError().first;
     for (int idx = 0; idx < m + 1; ++idx) {
       theta(idx) += eps;
       auto di = (loglossAndError().first - ll) / eps;
-      CHECK_NEAR(di, dtheta(idx), 1e-10);
+      theta(idx) -= eps;
+      CHECK_NEAR(di, dtheta(idx), 1);
     }
-    return "";
+    return true;
   };
   int numBatches =
       (X.size() + options.miniBatchSize - 1) / options.miniBatchSize;
@@ -97,18 +98,21 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       // Minimize log-loss:
       //  -Sigma(log P{ vY[i] | X1[i] }) / n
       //   + L2 / 2 * norm(theta) * norm(theta)
+      double intercept = 0;
+      std::swap(intercept, theta(m));
       arma::vec dtheta =
-          ((((probs - 1.0) % vY).t() * X1).t() / n) + (options.L2 * theta);
+          ((((probs - 1.0) % vY).t() * X1) / n).t() + (options.L2 * theta);
+      std::swap(intercept, theta(m));
       using namespace folly::gen;
       VLOG(1) << (from(arma::conv_to<std::vector<double>>::from(dtheta)) |
                   unsplit(','))
-              << checkGrad(dtheta);
+              << (n == X.size() && checkGrad(dtheta));
       if (options.useNewton) {
         arma::mat H(m + 1, m + 1, arma::fill::zeros);
         for (int i = 0; i < n; ++i) {
           H += (X1.row(i).t() * X1.row(i)) * (probs(i) * (1 - probs(i))) / n;
         }
-        for (int i = 0; i < m + 1; ++i) {
+        for (int i = 0; i < m; ++i) {
           H(i, i) += options.L2;
         }
         dtheta = arma::inv(H) * dtheta;

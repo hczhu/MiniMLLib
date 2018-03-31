@@ -27,6 +27,21 @@ TEST(MatrixTest, Basic) {
       EXPECT_NEAR(A1(i, j), 1 - iA(i, j), 1e-10);
     }
   }
+
+  arma::mat A2 = 0.5 * iA;
+  CHECK_EQ(A2.n_cols, iA.n_cols);
+  CHECK_EQ(A2.n_rows, iA.n_rows);
+  for (int i = 0; i < A2.n_rows; ++i) {
+    for (int j = 0; j < A2.n_cols; ++j) {
+      EXPECT_NEAR(A2(i, j), 0.5 * iA(i, j), 1e-10);
+    }
+  }
+
+  arma::vec v1 = {1.0, 2.0, 3.0};
+  arma::vec v2 = 0.5 * v1;
+  for (int i = 0; i < v2.size(); ++i) {
+    EXPECT_NEAR(v1(i), v2(i), 1e-10);
+  }
 }
 
 int main(int argc, char* argv[]) {

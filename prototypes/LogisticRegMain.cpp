@@ -85,12 +85,12 @@ int main(int argc, char* argv[]) {
     options.stopIfZeroError = false;
     options.numEpoch = 1000000000;
     options.randomInit = false;
-    options.miniBatchSize = 100;
+    options.miniBatchSize = Y.size();
     options.minThetaDiffNorm = 1e-15;
     options.learningRate = 10;
     options.momentumMultiplier = 0;
     options.lrDecay = 1;
-    options.L2 = 0;
+    options.L2 = 1;
     auto theta = fitLR(X, Y, options);
     {
       std::ofstream f(std::string(name) + ".lr");
