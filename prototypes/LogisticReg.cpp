@@ -141,8 +141,7 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
       bestEpoch = epoch;
     }
     if (arma::norm(prevTheta - theta) < options.minThetaDiffNorm) {
-      LOG(INFO) << "Exiting earlier due to that the theta update is too small "
-                   "in the last epoch.";
+      LOG(INFO) << "The model converged at epoch #" << epoch;
       resCode = ResCode::CONVERGED;
     }
     if (er == 0 && options.stopIfZeroError) {

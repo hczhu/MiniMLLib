@@ -34,6 +34,7 @@
 
 DEFINE_bool(use_newtone, false,
             "Wether to use Newton method for optimization.");
+DEFINE_double(L2, 1, "L2 lambda.");
 
 using namespace mini_ml;
 
@@ -88,11 +89,11 @@ int main(int argc, char* argv[]) {
     options.numEpoch = 1000000000;
     options.randomInit = false;
     options.miniBatchSize = Y.size();
-    options.minThetaDiffNorm = 1e-3;
+    options.minThetaDiffNorm = 1e-5;
     options.learningRate = 1;
     options.momentumMultiplier = 0;
     options.lrDecay = 1;
-    options.L2 = 1;
+    options.L2 = FLAGS_L2;
     options.useNewton = FLAGS_use_newtone;
     auto theta = fitLR(X, Y, options);
     {
