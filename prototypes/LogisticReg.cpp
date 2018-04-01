@@ -80,13 +80,18 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
   double best = 1e20;
   decltype(theta) bestTheta = theta;
   int bestEpoch = 0;
-  if (options.useNewton) {
-    CHECK_EQ(1, numBatches);
-  }
+  CHECK(1 == numBatches || !options.useNewton)
+      << "Newton optimizatio doesn't work with mini batching.";
   if (FLAGS_num_epoch > 0) {
     options.numEpoch = FLAGS_num_epoch;
   }
   ResCode resCode = ResCode::NOT_CONVERGED;
+  const arma::vec l2Diag = [&] {
+    arma::vec l2Diag(m + 1);
+    l2Diag.fill(options.L2);
+    l2Diag(m) = 0;
+    return l2Diag;
+  }();
   for (int epoch = 0;
        epoch < options.numEpoch && resCode == ResCode::NOT_CONVERGED; ++epoch) {
     auto prevTheta = theta;
@@ -116,14 +121,10 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
               unsplit(','))
           << (n == X.size() && checkGrad(dtheta));
       if (options.useNewton) {
-        arma::mat H(m + 1, m + 1, arma::fill::zeros);
-        for (int i = 0; i < n; ++i) {
-          H += (X1.row(i).t() * X1.row(i)) * (probs(i) * (1 - probs(i))) / n;
-        }
-        for (int i = 0; i < m; ++i) {
-          H(i, i) += options.L2;
-        }
-        dtheta = arma::inv(H) * dtheta;
+        dtheta =
+            arma::inv((X1.t() * arma::diagmat(probs % (1 - probs) / n) * X1) +
+                      arma::diagmat(l2Diag)) *
+            dtheta;
       } else {
         momentum = momentum * options.momentumMultiplier +
                    dtheta * (1 - options.momentumMultiplier);

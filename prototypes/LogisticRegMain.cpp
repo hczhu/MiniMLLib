@@ -32,7 +32,7 @@
 
 #include "prototypes/LogisticReg.h"
 
-DEFINE_bool(use_newtone, false,
+DEFINE_bool(use_newton, false,
             "Wether to use Newton method for optimization.");
 DEFINE_double(L2, 1, "L2 lambda.");
 
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
     options.momentumMultiplier = 0;
     options.lrDecay = 1;
     options.L2 = FLAGS_L2;
-    options.useNewton = FLAGS_use_newtone;
+    options.useNewton = FLAGS_use_newton;
     auto theta = fitLR(X, Y, options);
     {
       std::ofstream f(std::string(name) + ".lr");
