@@ -8,9 +8,10 @@ import matplotlib.pyplot as plt, matplotlib.image as mpimg
 # %matplotlib inline
 
 def main():
+    name = 'data/logistic_xy.txt' if len(sys.argv) < 2 else sys.argv[1]
     bluex, bluey, redx, redy = [], [], [], []
     theta = []
-    with open('data/logistic_xy.txt', 'r') as f: 
+    with open(name, 'r') as f: 
         theta = list(map(float, f.readline().strip().split()))
         for line in f:
             x, y, label = map(float, line.strip().split())
@@ -33,7 +34,6 @@ def main():
     plt.plot(x, y, label = 'LR decision boundary', color = 'black')
     plt.legend()
     plt.show()
-
 
 if __name__ == "__main__":
     main()
