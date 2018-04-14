@@ -78,7 +78,7 @@ def main():
     else:
         plotCurves()
 
-if __name__ == "__main__":
+def test():
     sys.stdin = open('data/scatter_test_data.txt', 'r')
     sys.argv.append('scatter')
     main()
@@ -86,3 +86,10 @@ if __name__ == "__main__":
     sys.argv[-1] = 'curve'
     sys.argv.append('1')
     main()
+
+if __name__ == "__main__":
+   if sys.argv[-1] == 'test':
+        sys.argv = sys.argv[0:-1]
+        test()
+   else:
+        main()
