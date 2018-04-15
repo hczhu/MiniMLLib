@@ -113,10 +113,10 @@ def main():
     sys.stderr.write('Loaded all data.\n')
     sys.stderr.flush()
     datatime = datetime.now()
-    sys.stderr.write('Data loading time = {:d} seconds'.format((datatime - begin).seconds))
+    sys.stderr.write('Data loading time = {:d} seconds\n'.format((datatime - begin).seconds))
     sys.stderr.flush()
     nn_train(trainData, trainLabels, devData, devLabels, testData, testLabels)
-    sys.stderr.write('Training time = {:d} seconds'.format((datetime.now() - datatime).seconds))
+    sys.stderr.write('Training time = {:d} seconds\n'.format((datetime.now() - datatime).seconds))
     sys.stderr.flush()
 
 if __name__ == '__main__':
