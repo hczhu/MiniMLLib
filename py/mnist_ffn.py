@@ -17,10 +17,7 @@ def softmax(x):
     return x / x.sum(0)
 
 def sigmoid(x):
-    """
-    Compute the sigmoid function for the input here.
-    """
-    return 1.0 / (1 + np.exp(-x.clip(-100, 100)))
+    return 1.0 / (1.0 + np.exp(-x.clip(-100, 100)))
 
 def nn_train(trainData, trainLabels, devData, devLabels, testData, testLabels):
     (m, n) = trainData.shape
@@ -29,10 +26,10 @@ def nn_train(trainData, trainLabels, devData, devLabels, testData, testLabels):
     learning_rate = 5
     B = 1000
     W1 = np.random.randn(num_hidden, n)
-    B1 = np.zeros(num_hidden)
+    B1 = np.zeros(num_hidden, dtype=float)
 
     W2 = np.random.randn(O, num_hidden)
-    B2 = np.zeros(O)
+    B2 = np.zeros(O, dtype=float)
     L = 0.0001
     def forward(x, y):
         z1 = np.matmul(W1, x) + B1[:, np.newaxis]
@@ -40,7 +37,7 @@ def nn_train(trainData, trainLabels, devData, devLabels, testData, testLabels):
         z2 = np.matmul(W2, a1) + B2[:, np.newaxis]
         a2 = softmax(z2)
         accuracy = 1.0 * np.sum((np.argmax(a2, 0) == np.argmax(y, 0)).astype(int)) / y.shape[1]
-        xen = -np.sum(np.log(a2 * y + 1e-20)) / y.shape[1]
+        xen = -np.sum(y * np.log(a2 + 1e-20)) / y.shape[1]
         return z1, a1, z2, a2, xen, accuracy
     def report(name, x, y):
         _, _, _, _, xen, accuracy = forward(x.T, y.T)
@@ -68,9 +65,9 @@ def nn_train(trainData, trainLabels, devData, devLabels, testData, testLabels):
             dz1 = np.matmul(W2.T, dz2) * d_a1_z1
             dw1 = np.matmul(dz1, a0.T)
 
-            W2 -= (learning_rate / S) * dw2 + ((2.0 * L ) * W2)
+            W2 -= (learning_rate / S) * dw2 + (2 * L * learning_rate * W2)
             B2 -= (learning_rate / S) * dz2.sum(1)
-            W1 -= (learning_rate / S) * dw1 + ((2.0 * L) * W1)
+            W1 -= (learning_rate / S) * dw1 + (2 * L * learning_rate * W1)
             B1 -= (learning_rate / S) * dz1.sum(1)
         dev_stats.append(report('dev at epoch #{}'.format(epoch), devData, devLabels))
         train_stats.append(report('train at epoch #{}'.format(epoch), trainData, trainLabels))
