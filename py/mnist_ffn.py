@@ -1,6 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import sys
+from datetime import datetime
 
 def readData(images_file, labels_file):
     x = np.loadtxt(images_file, delimiter=',')
@@ -85,6 +86,7 @@ def one_hot_labels(labels):
     return one_hot_labels
 
 def main():
+    begin = datetime.now()
     np.random.seed(100)
     suffix = ''
     trainData, trainLabels = readData('data/images_train.csv' + suffix, 'data/labels_train.csv' + suffix)
@@ -108,9 +110,14 @@ def main():
     testData, testLabels = readData('data/images_test.csv', 'data/labels_test.csv')
     testLabels = one_hot_labels(testLabels)
     testData = (testData - mean) / std
-    sys.stderr.write('loaded all data.\n')
+    sys.stderr.write('Loaded all data.\n')
+    sys.stderr.flush()
+    datatime = datetime.now()
+    sys.stderr.write('Data loading time = {:d} seconds'.format((datatime - begin).seconds))
     sys.stderr.flush()
     nn_train(trainData, trainLabels, devData, devLabels, testData, testLabels)
+    sys.stderr.write('Training time = {:d} seconds'.format((datetime.now() - datatime).seconds))
+    sys.stderr.flush()
 
 if __name__ == '__main__':
     main()
