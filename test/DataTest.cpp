@@ -34,8 +34,8 @@
 #include "Data.h"
 
 TEST(DataTest, Sparse) {
-  mini_ml::SparseFeatureIns<int> ins;
-  std::vector<mini_ml::SparseFeatureIns<int>::Fid> expect;
+  mlight::SparseFeatureIns<int> ins;
+  std::vector<mlight::SparseFeatureIns<int>::Fid> expect;
   for (int i = 0; i < 10; ++i) {
     ins.addFeature(i);
     expect.push_back(i);
@@ -44,7 +44,7 @@ TEST(DataTest, Sparse) {
 }
 
 TEST(DataTest, Dense) {
-  mini_ml::DenseFeatureIns<int> ins(8, -1);
+  mlight::DenseFeatureIns<int> ins(8, -1);
   ins.setFeature(0, 1);
   ins.setFeature(3, 3);
   ins.setFeature(7, 0);
@@ -61,7 +61,7 @@ TEST(DataTest, Dense) {
     const auto &baseIns = ins;
     EXPECT_EQ(pr.second,
               baseIns.getFeatureDouble(
-                  static_cast<mini_ml::DataInstanceBase::Fid>(pr.first)));
+                  static_cast<mlight::DataInstanceBase::Fid>(pr.first)));
   }
 }
 

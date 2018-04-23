@@ -36,7 +36,7 @@ DEFINE_bool(use_newton, false,
             "Wether to use Newton method for optimization.");
 DEFINE_double(L2, 1, "L2 lambda.");
 
-using namespace mini_ml;
+using namespace mlight;
 
 int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);

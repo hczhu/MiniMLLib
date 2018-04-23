@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace mini_ml {
+namespace mlight {
 
 struct Options {
   double L2 = 0;
@@ -32,4 +32,4 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
                           Options options = {},
                           const std::vector<double>& W = {});
 
-}  // namespace mini_ml
+}  // namespace mlight

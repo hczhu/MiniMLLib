@@ -37,7 +37,7 @@
 
 #include "prototypes/LinearReg.h"
 
-using namespace mini_ml;
+using namespace mlight;
 
 void quasarSpectraLinearReg() {
   using namespace folly::gen;

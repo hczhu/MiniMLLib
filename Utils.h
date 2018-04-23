@@ -2,6 +2,6 @@
 
 #include <vector>
 
-namespace mini_ml {
+namespace mlight {
 
-}  // namespace mini_ml
+}  // namespace mlight

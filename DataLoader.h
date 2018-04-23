@@ -2,7 +2,7 @@
 
 #include <map>
 
-namespace mini_ml {
+namespace mlight {
 
 class DataLoader {
  public:
@@ -10,4 +10,4 @@ class DataLoader {
   
 };
 
-}  // namespace mini_ml
+}  // namespace mlight

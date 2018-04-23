@@ -3,7 +3,7 @@
 #include <armadillo>
 #include <glog/logging.h>
 
-namespace mini_ml {
+namespace mlight {
 
 std::vector<double> fitLSM(const std::vector<std::vector<double>>& X,
                            const std::vector<double>& Y, double L2,
@@ -60,4 +60,4 @@ std::vector<double> fitLSM(const std::vector<std::vector<double>>& X,
   return arma::conv_to<std::vector<double>>::from(theta);
 }
 
-}  // namespace mini_ml
+}  // namespace mlight

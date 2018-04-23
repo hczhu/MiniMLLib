@@ -54,7 +54,7 @@ void _displayType(T&& t);
 
 /* template end */
 
-using namespace mini_ml;
+using namespace mlight;
 
 template <typename T>
 arma::vec generateLinearData(

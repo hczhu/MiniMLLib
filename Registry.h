@@ -7,7 +7,7 @@
 
 #include <glog/logging.h>
 
-namespace mini_ml {
+namespace mlight {
 
 template <typename K, typename V>
 struct Registry : std::unordered_map<K, V> {
@@ -27,15 +27,15 @@ struct InitFunc {
   }
 };
 
-} // namespace mini_ml
+} // namespace mlight
 
 #define DECLARE_REGISTRY(name, keyType, valueType) \
-  namespace mini_ml { namespace registries { \
-    struct name##Registry##T : public mini_ml::Registry<keyType, valueType> {}; \
+  namespace mlight { namespace registries { \
+    struct name##Registry##T : public mlight::Registry<keyType, valueType> {}; \
   }}
 
 #define REGISTRY(name) \
-    (::mini_ml::registries::name##Registry##T::get())
+    (::mlight::registries::name##Registry##T::get())
 
 #define CONCAT(a, b) a##b
 #define CONCAT1(a, b) CONCAT(a, b)
@@ -43,7 +43,7 @@ struct InitFunc {
 
 #define REGISTER(name, key, value) \
   namespace { \
-    static mini_ml::InitFunc APPEND_LINE_NO(name)([&] { \
+    static mlight::InitFunc APPEND_LINE_NO(name)([&] { \
       REGISTRY(name).registerValue(key, value, #name ":" #key); \
     }); \
   }

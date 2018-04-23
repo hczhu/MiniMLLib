@@ -6,7 +6,7 @@
 #include <folly/Optional.h>
 #include <glog/logging.h>
 
-namespace mini_ml {
+namespace mlight {
 
 // Read-only instance
 class DataInstanceBase {
@@ -77,4 +77,4 @@ class DenseFeatureIns : public DataInstanceBase {
 
 
 
-}  // namespace mini_ml
+}  // namespace mlight

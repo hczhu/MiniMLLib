@@ -8,7 +8,7 @@
 DEFINE_int32(log_every_n, 1000, "Log logloss every N epoch.");
 DEFINE_int32(num_epoch, 0, "Number of epochs");
 
-namespace mini_ml {
+namespace mlight {
 
 std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
                           const std::vector<int>& Y, Options options,
@@ -175,4 +175,4 @@ std::vector<double> fitLR(const std::vector<std::vector<double>>& X,
           : theta);
 }
 
-}  // namespace mini_ml
+}  // namespace mlight
