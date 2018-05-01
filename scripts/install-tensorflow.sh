@@ -2,7 +2,7 @@
 
 set -ex
 
-sudo apt-get install pkg-config zip g++ zlib1g-dev unzip python
+sudo apt-get install pkg-config zip g++ zlib1g-dev unzip python mpich
 wget https://github.com/bazelbuild/bazel/releases/download/0.12.0/bazel-0.12.0-installer-linux-x86_64.sh
 chmod a+x bazel-0.12.0-installer-linux-x86_64.sh 
 sudo ./bazel-0.12.0-installer-linux-x86_64.sh
