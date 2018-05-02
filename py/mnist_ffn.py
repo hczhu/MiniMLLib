@@ -82,7 +82,7 @@ def nn_train(trainData, trainLabels, devData, devLabels, testData):
             if b + B >= m:
                 sys.stderr.write('Smoothed training log-loss: {:.4f}\n'.format(train_log_loss))
         report('Dev at epoch #{}'.format(epoch), devData, devLabels)
-        learning_rate *= 0.9
+        learning_rate *= 0.98
     report('Train', trainData, trainLabels)
     _, _, _, _, _, _, pred = forward(testData.T, one_hot_labels(np.zeros(testData.shape[0])).T)
     print('ImageId,Label')
