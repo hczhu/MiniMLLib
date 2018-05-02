@@ -57,8 +57,9 @@ def nn_train(trainData, trainLabels, devData, devLabels, testData):
             accuracy)) 
         sys.stderr.flush()
         return (xen, accuracy)
-    E = 30
+    E = 100
     train_log_loss = 0
+    dev_acc_stop_thrshold = 0.97
     for epoch in range(1, E + 1):
         for b in range(0, m, B):
             # Reference: http://cs229.stanford.edu/notes/cs229-notes-backprop.pdf
@@ -78,7 +79,8 @@ def nn_train(trainData, trainLabels, devData, devLabels, testData):
             W1 -= (learning_rate / S) * dw1 + (2 * L * learning_rate * W1)
             B1 -= (learning_rate / S) * dz1.sum(1)
             train_log_loss = train_log_loss * 0.9 + 0.1 * xen
-            sys.stderr.write('Smoothed training log-loss: {:.4f}\n'.format(train_log_loss))
+            if b + B >= m:
+                sys.stderr.write('Smoothed training log-loss: {:.4f}\n'.format(train_log_loss))
         report('Dev at epoch #{}'.format(epoch), devData, devLabels)
     report('Train', trainData, trainLabels)
     _, _, _, _, _, _, pred = forward(testData.T, one_hot_labels(np.zeros(testData.shape[0])).T)
