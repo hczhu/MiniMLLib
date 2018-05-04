@@ -15,7 +15,7 @@ void _displayType(T&& t);
 
 #define PEEK(x) LOG(INFO) << #x << ": [" << (x) << "]"
 
-DECLARE_REGISTRY(MathFunc, std::string, std::function<int(int)>)
+DECLARE_REGISTRY(MathFunc, std::string, std::function<int(int)>);
 REGISTER(MathFunc, "square", [](int a) -> int {
   return a * a;
 });

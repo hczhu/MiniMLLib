@@ -40,7 +40,7 @@ TEST(MatrixTest, Basic) {
   arma::vec v1 = {1.0, 2.0, 3.0};
   arma::vec v2 = 0.5 * v1;
   for (int i = 0; i < v2.size(); ++i) {
-    EXPECT_NEAR(v1(i), v2(i), 1e-10);
+    EXPECT_NEAR(0.5 * v1(i), v2(i), 1e-10);
   }
 }
 

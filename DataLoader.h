@@ -1,6 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include "Data.h"
+#include "Registry.h"
 
 namespace mlight {
 
@@ -9,6 +12,7 @@ class DataLoader {
   class NoMoreDataExp : public std::exception {};
 
   struct Config {
+    std::string name = "";
     int nFeatures = 0;
     int nInstances = 0;
     bool hasLabels = false;
@@ -24,11 +28,26 @@ class DataLoader {
   // Start over from the first data batch.
   virtual void rewind() = 0;
 
+  virtual ~DataLoader();
+
  protected:
-  explicit DataLoader(const Config& config);
+  explicit DataLoader(Config config);
 
  private: 
   Config config_;
 };
 
+std::unique_ptr<DataLoader> getDataLoader(DataLoader::Config config);
+
 }  // namespace mlight
+
+DECLARE_REGISTRY(
+    DataLoaderReg, std::string,
+    std::function<std::unique_ptr<DataLoader>(DataLoader::Config)>);
+
+#define REGISTER_DATA_LOADER(name, className) \
+  REGISTER(DataLoaderReg, name, [](DataLoader::Config config) { \
+    return std::make_unique<className>(std::move(config)); \
+  })
+
+#define DATA_LOADER_REGISTRY REGISTRY(DataLoaderReg)
