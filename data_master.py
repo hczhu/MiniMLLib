@@ -24,15 +24,27 @@ def init_logger():
     return logging
 
 
+def get_sep(f):
+    assert f.endswith(".csv") or f.endswith(
+        ".tsv"
+    ), f"File name should end with .csv or .tsv. {f} is not valid."
+    return "," if f.endswith(".csv") else "\t"
+
+
 def parse_file_names(files):
     logging.info(f"Checking files: {files}")
     files = files.split(",")
     for f in files:
+        get_sep(f)
         logging.info(f"Checking file: {f}")
-        assert f.endswith(".csv") or f.endswith(".tsv")
         with open(f, "r") as fd:
             pass
     return files
+
+
+def validate_filename(f):
+    get_sep(f)
+    return f
 
 
 def get_args():
@@ -50,7 +62,13 @@ def get_args():
         default=None,
     )
     parser.add_argument(
-        "--args",
+        "--output_file",
+        type=validate_filename,
+        help="The output file path.",
+        default=None,
+    )
+    parser.add_argument(
+        "--columns",
         help="""
             Operation arguments
                 select_columns: comma separated colmun names
@@ -66,14 +84,16 @@ def get_args():
     gArgs, unknows = parser.parse_known_args()
     if len(unknows) > 0:
         logging.warning(f"Unknown args: {unknows}")
-    logging.info(f"op: {gArgs.op}; args: {gArgs.args}; files: {gArgs.files}.")
+    logging.info(
+        f"op: {gArgs.op}; columns: {gArgs.columns}; files: {gArgs.files}."
+    )
 
 
 def read_files(files):
     dfs = []
     for f in files:
         logging.info(f"Reading file: {f}")
-        sep = "," if f.endswith(".csv") else "\t"
+        sep = get_sep(f)
         dfs.append(pd.read_csv(f, sep=sep, index_col=gArgs.index_col))
         logging.info(
             f"Loaded dataframe with shape: {dfs[-1].shape}; columns: {dfs[-1].columns}"
@@ -88,12 +108,18 @@ def read_files(files):
 
 
 def select_columns(df):
-    print(df.loc[:10, gArgs.args.split(",")])
+    columns = gArgs.columns.split(",")
+    if gArgs.output_file is None:
+        print(df.loc[:, columns])
+    else:
+        df.loc[:, columns].to_csv(
+            gArgs.output_file, sep=get_sep(gArgs.output_file), index=False
+        )
 
 
 def correlation_matrix(df):
     corr_ma = df.corr()
-    left_columns, right_columns = gArgs.args.split(":")
+    left_columns, right_columns = gArgs.columns.split(":")
     print(corr_ma.loc[left_columns.split(","), right_columns.split(",")])
 
 
