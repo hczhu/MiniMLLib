@@ -53,7 +53,7 @@ def get_args():
     parser.add_argument(
         "--op",
         help="Data operations?",
-        choices=["select_columns", "correlation_matrix"],
+        choices=["select_columns", "correlation_matrix", "linear_regression"],
         default="select_columns",
     )
     parser.add_argument(
@@ -74,6 +74,7 @@ def get_args():
             Operation arguments
                 select_columns: comma separated colmun names
                 correlation_matrix: two comma separated column name lists with a ':' between 2 lists
+                linear_regression: Y_column=x1_column,x2_column,...
         """,
         type=str,
         default="",
@@ -116,6 +117,18 @@ def select_columns(df):
         df.loc[:, columns].to_csv(
             gArgs.output_file, sep=get_sep(gArgs.output_file), index=False
         )
+
+
+def linear_regression(df):
+    lr = LinearRegression(fit_intercept=True, normalize=True)
+    y_column, x_columns = gArgs.split("=")
+    x_columns = x_columns.split(",")
+    Y = df.loc[:, [y_column]]
+    X = df.loc[:, x_columns]
+    reg = lr.fit(X, Y)
+    print(f"the coefficient of determination R^2 of the prediction: {reg.score()}")
+    print(reg.coef_)
+    print(reg.intercept_)
 
 
 def correlation_matrix(df):
