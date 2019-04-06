@@ -121,14 +121,23 @@ def select_columns(df):
 
 def linear_regression(df):
     lr = LinearRegression(fit_intercept=True, normalize=True)
-    y_column, x_columns = gArgs.split("=")
+    y_column, x_columns = gArgs.columns.split("=")
     x_columns = x_columns.split(",")
     Y = df.loc[:, [y_column]]
     X = df.loc[:, x_columns]
     reg = lr.fit(X, Y)
-    print(f"the coefficient of determination R^2 of the prediction: {reg.score()}")
-    print(reg.coef_)
-    print(reg.intercept_)
+    print(
+        f"The coefficient of determination R^2 of the prediction: {reg.score(X, Y)}"
+    )
+    cof_x = reg.coef_[0, :]
+    assert len(cof_x) == len(x_columns)
+    print(
+        "\n    ".join(
+            [f"{y_column} ="]
+            + [f"{cof_x[i]} * {x_columns[i]}" for i in range(len(x_columns))]
+            + [f"{reg.intercept_}"]
+        )
+    )
 
 
 def correlation_matrix(df):
@@ -143,6 +152,7 @@ def main():
     ops = {
         "select_columns": select_columns,
         "correlation_matrix": correlation_matrix,
+        "linear_regression": linear_regression,
     }
     ops[gArgs.op](df)
 
