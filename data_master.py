@@ -134,10 +134,11 @@ def linear_regression(df):
     print(
         "\n    ".join(
             [f"{y_column} ="]
-            + [f"{cof_x[i]} * {x_columns[i]}" for i in range(len(x_columns))]
-            + [f"{reg.intercept_}"]
+            + [f"{cof_x[i]:.2f} * {x_columns[i]}" for i in range(len(x_columns))]
+            + [f"{reg.intercept_[0]:.2f}"]
         )
     )
+    print(reg.predict(X))
 
 
 def correlation_matrix(df):
