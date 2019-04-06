@@ -126,6 +126,17 @@ def linear_regression(df):
     Y = df.loc[:, [y_column]]
     X = df.loc[:, x_columns]
     reg = lr.fit(X, Y)
+    predicted_y = reg.predict(X)
+    logging.info(
+        "Predicted v.s. Real values: {}".format(
+            "\n    ".join(
+                [
+                    f"{predicted_y[i, 0]:.1f} {Y.loc[i, y_column]:.1f} {100.0 * abs(predicted_y[i, 0] - Y.loc[i, y_column]) / max(1.0, Y.loc[i, y_column]):.0f}"
+                    for i in range(Y.shape[0])
+                ]
+            )
+        )
+    )
     print(
         f"The coefficient of determination R^2 of the prediction: {reg.score(X, Y)}"
     )
@@ -134,11 +145,13 @@ def linear_regression(df):
     print(
         "\n    ".join(
             [f"{y_column} ="]
-            + [f"{cof_x[i]:.2f} * {x_columns[i]}" for i in range(len(x_columns))]
+            + [
+                f"{cof_x[i]:.2f} * {x_columns[i]}"
+                for i in range(len(x_columns))
+            ]
             + [f"{reg.intercept_[0]:.2f}"]
         )
     )
-    print(reg.predict(X))
 
 
 def correlation_matrix(df):
