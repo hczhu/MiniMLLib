@@ -156,7 +156,14 @@ def linear_regression(df):
 
 def correlation_matrix(df):
     corr_ma = df.corr()
-    left_columns, right_columns = gArgs.columns.split(":")
+    left_columns, right_columns = "", ""
+
+    if gArgs.columns == "*":
+        left_columns = right_columns = ",".join([str(col) for col in df.columns])
+    else:
+        left_and_right = gArgs.columns.split(":")
+        left_columns = left_and_right[0]
+        right_columns = left_and_right[1] if len(left_and_right) > 1 else left_columns
     print(corr_ma.loc[left_columns.split(","), right_columns.split(",")])
 
 
