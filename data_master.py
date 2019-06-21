@@ -63,6 +63,12 @@ def get_args():
         default=None,
     )
     parser.add_argument(
+        "--data_type_is_string",
+        type=bool,
+        help="All data types are string",
+        default=False,
+    )
+    parser.add_argument(
         "--output_file",
         type=validate_filename,
         help="The output file path.",
@@ -96,13 +102,30 @@ def read_files(files):
     for f in files:
         logging.info(f"Reading file: {f}")
         sep = get_sep(f)
-        dfs.append(pd.read_csv(f, sep=sep, index_col=gArgs.index_col))
+        dfs.append(
+            pd.read_csv(
+                f,
+                sep=sep,
+                index_col=gArgs.index_col,
+                dtype=(str if gArgs.data_type_is_string else None),
+            )
+        )
         logging.info(
             f"Loaded dataframe with shape: {dfs[-1].shape}; columns: {dfs[-1].columns}"
         )
     df = dfs[0]
     if len(dfs) > 1:
-        df = df.join(dfs[1:])
+        for r_df in dfs[1:]:
+            overlapping_columns = list(
+                set.intersection(
+                    set(df.columns.values), set(r_df.columns.values)
+                )
+            )
+            logging.info(f"Overlapping columns {overlapping_columns}")
+
+            df = pd.merge(
+                df, r_df, how="outer", on=overlapping_columns, suffixes=("", "")
+            )
     logging.info(
         f"Got joined dataframe with shape: {df.shape}; columns: {df.columns}"
     )
@@ -159,11 +182,15 @@ def correlation_matrix(df):
     left_columns, right_columns = "", ""
 
     if gArgs.columns == "*":
-        left_columns = right_columns = ",".join([str(col) for col in df.columns])
+        left_columns = right_columns = ",".join(
+            [str(col) for col in df.columns]
+        )
     else:
         left_and_right = gArgs.columns.split(":")
         left_columns = left_and_right[0]
-        right_columns = left_and_right[1] if len(left_and_right) > 1 else left_columns
+        right_columns = (
+            left_and_right[1] if len(left_and_right) > 1 else left_columns
+        )
     print(corr_ma.loc[left_columns.split(","), right_columns.split(",")])
 
 
