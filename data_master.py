@@ -83,7 +83,13 @@ def get_args():
                 linear_regression: Y_column=x1_column,x2_column,...
         """,
         type=str,
-        default="",
+        default=None,
+    )
+    parser.add_argument(
+        "--join_on_columns",
+        type=str,
+        help="Comma separated columns to join files on.",
+        default=None,
     )
     parser.add_argument(
         "files", help="Comma separated file names.", type=parse_file_names
@@ -122,10 +128,17 @@ def read_files(files):
                 )
             )
             logging.info(f"Overlapping columns {overlapping_columns}")
-
-            df = pd.merge(
-                df, r_df, how="outer", on=overlapping_columns, suffixes=("", "")
-            )
+            on = overlapping_columns
+            suffixes = (False, False)
+            if gArgs.join_on_columns is not None:
+                on = gArgs.join_on_columns.split(",")
+                suffixes = ("", "_")
+                conflict_colums = set(overlapping_columns) - set(on)
+                if len(conflict_colums) > 0:
+                    logging.info(f"There are conflicting columns {list(conflict_colums)}")
+                    df = df.set_index(on)
+                    df.update(r_df.set_index(on), overwrite=False)
+            df = pd.merge(df, r_df, how="outer", on=on, suffixes=suffixes)
     logging.info(
         f"Got joined dataframe with shape: {df.shape}; columns: {df.columns}"
     )
@@ -133,11 +146,15 @@ def read_files(files):
 
 
 def select_columns(df):
-    columns = gArgs.columns.split(",")
+    selected_df = df
+    if gArgs.columns is not None:
+        columns = gArgs.columns.split(",")
+        selected_df = df.loc[:, columns]
+
     if gArgs.output_file is None:
-        print(df.loc[:, columns])
+        print(selected_df)
     else:
-        df.loc[:, columns].to_csv(
+        selected_df.to_csv(
             gArgs.output_file, sep=get_sep(gArgs.output_file), index=False
         )
 
