@@ -128,20 +128,14 @@ def read_files(files):
                 )
             )
             logging.info(f"Overlapping columns {overlapping_columns}")
-            on = overlapping_columns
-            suffixes = (False, False)
-            if gArgs.join_on_columns is not None:
-                on = gArgs.join_on_columns.split(",")
-                suffixes = ("", "_")
-                conflict_colums = set(overlapping_columns) - set(on)
-                if len(conflict_colums) > 0:
-                    logging.info(f"There are conflicting columns {list(conflict_colums)}")
-                    df = df.set_index(on)
-                    df.update(r_df.set_index(on), overwrite=False)
-            df = pd.merge(df, r_df, how="outer", on=on, suffixes=suffixes)
+            df = pd.merge(df, r_df, how="outer", on=overlapping_columns, suffixes=(False, False))
     logging.info(
         f"Got joined dataframe with shape: {df.shape}; columns: {df.columns}"
     )
+    if gArgs.join_on_columns is not None:
+        groupby_columns = gArgs.join_on_columns.split(",")
+        logging.info(f"Groupying by columns {groupby_columns}")
+        df = df.groupby(groupby_columns).first().reset_index()
     return df
 
 
