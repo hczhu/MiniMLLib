@@ -69,6 +69,12 @@ def get_args():
         default=False,
     )
     parser.add_argument(
+        "--strip_string_values",
+        type=bool,
+        help="Strip whitespaces from string values.",
+        default=True,
+    )
+    parser.add_argument(
         "--output_file",
         type=validate_filename,
         help="The output file path.",
@@ -105,6 +111,12 @@ def get_args():
 
 def read_files(files):
     dfs = []
+    def converter(value):
+        if gArgs.strip_string_values and isinstance(value, str):
+            return value.strip()
+        else:
+            return value
+
     for f in files:
         logging.info(f"Reading file: {f}")
         sep = get_sep(f)
@@ -114,6 +126,9 @@ def read_files(files):
                 sep=sep,
                 index_col=gArgs.index_col,
                 dtype=(str if gArgs.data_type_is_string else None),
+                converters={
+                    idx: converter for idx in range(100)
+                },
             )
         )
         logging.info(
